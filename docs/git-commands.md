@@ -15,26 +15,29 @@ This guide assumes your team uses this **branch model**:
 
 ## Table of contents
 
-1. [Starting a new feature](#1-starting-a-new-feature)
-2. [Working on the feature daily](#2-working-on-the-feature-daily)
-3. [Pushing feature branch to remote](#3-pushing-feature-branch-to-remote)
-4. [Creating a pull request (PR)](#4-creating-a-pull-request-pr)
-5. [Keeping feature branch updated with develop](#5-keeping-feature-branch-updated-with-develop)
-6. [Local commit exists but remote is ahead](#6-local-commit-exists-but-remote-repo-is-ahead)
-7. [Merging feature branch into develop](#7-merging-feature-branch-into-develop)
-8. [Pushing directly to develop](#8-pushing-directly-to-develop-branch)
-9. [Merging develop into staging](#9-merging-develop-into-staging)
-10. [Merging staging into main](#10-merging-staging-into-main)
-11. [Hotfix workflow](#11-hotfix-workflow)
-12. [Undoing mistakes](#12-undoing-mistakes)
-13. [Viewing branches and history](#13-viewing-branches-and-history)
-14. [Stashing changes](#14-stashing-changes)
-15. [Recommended best practices](#15-recommended-git-best-practices-for-junior-developers)
-16. [Common problems and fixes](#16-common-git-problems-and-fixes)
-17. [Visual Git flow](#17-visual-git-flow-explanation)
-18. [Golden rules](#18-golden-rules)
+Section titles below are plain text (not clickable links), so Markdown preview will not try to open paths or fragments. Use your editor’s **Outline** view or scroll to jump to a section.
+
+1. Starting a new feature
+2. Working on the feature daily
+3. Pushing feature branch to remote
+4. Creating a pull request (PR)
+5. Keeping feature branch updated with develop
+6. Local commit exists but remote is ahead
+7. Merging feature branch into develop
+8. Pushing directly to develop
+9. Merging develop into staging
+10. Merging staging into main
+11. Hotfix workflow
+12. Undoing mistakes
+13. Viewing branches and history
+14. Stashing changes
+15. Recommended Git best practices for junior developers
+16. Common Git problems and fixes
+17. Visual Git flow explanation
+18. Golden rules
 
 ---
+
 
 ## 1. Starting a new feature
 
@@ -64,7 +67,7 @@ Use a **prefix** so people see the type of work at a glance:
 |--------|---------|
 | `feature/` | New functionality |
 | `bugfix/` | Fixing a bug (non-urgent) |
-| `hotfix/` | Urgent production fixes (see [Hotfix workflow](#11-hotfix-workflow)) |
+| `hotfix/` | Urgent production fixes (see **section 11 — Hotfix workflow**) |
 | `chore/` | Tooling, config, housekeeping (team-dependent) |
 
 Examples:
@@ -88,6 +91,7 @@ Examples:
 - **History:** each merge tells a story; bisecting and rollbacks are easier.
 
 ---
+
 
 ## 2. Working on the feature daily
 
@@ -136,6 +140,7 @@ git log --oneline
 - **First line ~50 characters** when possible; **blank line** then body if you need detail.
 - **Describe why** when the change is not obvious from the diff.
 
+
 ### Conventional Commits (common types)
 
 | Prefix | Meaning | Example |
@@ -149,6 +154,7 @@ git log --oneline
 **Why teams use this:** changelog generation, release notes, and quick scanning of history.
 
 ---
+
 
 ## 3. Pushing feature branch to remote
 
@@ -169,6 +175,7 @@ git push
 **Why push often:** backs up work, enables CI, and lets others see or continue your branch. Small pushes paired with small commits reduce “big bang” failures.
 
 ---
+
 
 ## 4. Creating a pull request (PR)
 
@@ -193,6 +200,7 @@ git push
 - [ ] **Commit history is readable** (reasonable messages; avoid “WIP” noise in final state if your team cares).
 
 ---
+
 
 ## 5. Keeping feature branch updated with develop
 
@@ -241,6 +249,7 @@ git merge develop
 **Why `git add` after fixing:** tells Git the conflict is resolved. **`git commit`** completes the merge.
 
 ---
+
 
 ## 6. Local commit exists but remote repo is ahead
 
@@ -316,6 +325,7 @@ git push --force
 
 ---
 
+
 ## 7. Merging feature branch into develop
 
 ### Typical team flow
@@ -341,6 +351,7 @@ git push origin --delete feature/your-feature-name
 **Note:** `-d` refuses if Git thinks the branch is not merged; use `-D` only if you **know** it is safe (destructive locally).
 
 ---
+
 
 ## 8. Pushing directly to develop branch
 
@@ -368,6 +379,7 @@ Most teams **prefer PRs** for traceability and review. Direct push to `develop` 
 
 ---
 
+
 ## 9. Merging develop into staging
 
 ### Purpose
@@ -389,6 +401,7 @@ git push origin staging
 **Importance of testing before production:** shipping untested merges to `main` increases outages, rollbacks, and stressful hotfixes.
 
 ---
+
 
 ## 10. Merging staging into main
 
@@ -414,6 +427,7 @@ git push origin main
 - Incidents are harder when “what is production?” is unclear.
 
 ---
+
 
 ## 11. Hotfix workflow
 
@@ -453,6 +467,7 @@ Exact commands depend on team flow (often PRs: `hotfix → main`, then `main →
 
 ---
 
+
 ## 12. Undoing mistakes
 
 ### Unstage files (keep edits in working tree)
@@ -475,7 +490,7 @@ git restore --staged .
 git restore .
 ```
 
-**Warning:** throws away **uncommitted** edits. If you might need them, use **[Stashing](#14-stashing-changes)** instead.
+**Warning:** throws away **uncommitted** edits. If you might need them, use the **Stashing** section (section 14) instead.
 
 ### Revert a commit safely (shared branches / already pushed)
 
@@ -496,6 +511,7 @@ git revert <commit-hash>
 **Avoid `git reset --hard` on pushed branches** unless you know exactly what you are doing and your team agrees.
 
 ---
+
 
 ## 13. Viewing branches and history
 
@@ -526,6 +542,7 @@ git log --oneline --graph --all
 
 ---
 
+
 ## 14. Stashing changes
 
 ### Scenario
@@ -549,11 +566,12 @@ git stash pop
 
 ---
 
+
 ## 15. Recommended Git best practices for junior developers
 
 - **Pull before you start** work on a shared branch; reduce surprise conflicts.
 - **Commit often** with **small, logical** units—each commit should be one clear idea when possible.
-- **Write clear messages** (see [Conventional Commits](#conventional-commits-common-types)).
+- **Write clear messages** (see **Conventional Commits** under section 2).
 - **Never commit secrets** (API keys, `.env` with real credentials). Use env vars and secret stores; add patterns to `.gitignore`.
 - **Avoid force push** unless explicitly approved; prefer `--force-with-lease` if you must.
 - **Open PRs early** as **drafts** to get direction and catch design issues sooner.
@@ -561,6 +579,7 @@ git stash pop
 - **Ask before rebasing** branches others use—rewriting shared history disrupts teammates.
 
 ---
+
 
 ## 16. Common Git problems and fixes
 
@@ -606,6 +625,7 @@ git reset --hard HEAD~1   # ⚠️ only if that commit is not needed here
 
 ---
 
+
 ## 17. Visual Git flow explanation
 
 Simple mental model of **promotion** (bottom → top):
@@ -630,6 +650,7 @@ feature/login-page
 Hotfixes often **start from `main`** and flow back into **`develop`** / **`staging`** so the fix is not lost.
 
 ---
+
 
 ## 18. Golden rules
 
