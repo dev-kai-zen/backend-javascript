@@ -1,5 +1,6 @@
 import { Router } from "express";
 
+
 import { auditLogsRoutes } from "../../../modules/audit-logs/audit-logs.routes.js";
 import { googleAuthRoutes } from "../../../modules/google-auth/google-auth.routes.js";
 import { rbacRoutes } from "../../../modules/rbac/rbac.routes.js";
@@ -8,9 +9,11 @@ import { testRoutes } from "../../../modules/test/test.routes.js";
 import { userLogsRoutes } from "../../../modules/user-logs/user-logs.routes.js";
 import { usersRoutes } from "../../../modules/users/users.routes.js";
 
+import { apiRateLimiter } from "../../middlewares/rate-limiter.js";
+
 export const v1ModulesRouter = Router();
 
-v1ModulesRouter.use("/test", testRoutes);
+v1ModulesRouter.use("/test", apiRateLimiter, testRoutes);
 v1ModulesRouter.use("/google-auth", googleAuthRoutes);
 v1ModulesRouter.use("/users", usersRoutes);
 v1ModulesRouter.use("/user-logs", userLogsRoutes);

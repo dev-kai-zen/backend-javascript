@@ -4,6 +4,7 @@ import cors from "cors";
 
 import { env } from "./env-config.js";
 import { setupSwagger } from "./swagger-config.js";
+import { apiRateLimiter } from "../shared/middlewares/rate-limiter.js";
 
 /**
  * Register global middleware here in order (top runs first).
@@ -19,8 +20,8 @@ export function applyMiddlewares(app) {
   app.use(cookieParser());
   app.use(express.json());
 
-  setupSwagger(app);
+  // Rate limits for `/api/v1` are applied in `shared/routes/index.js` (see `rate-limiter.js`).
+  app.use("/api/v1", apiRateLimiter);
 
-  // Add more middlewares below this line, e.g.:
-  // app.use(rateLimiter);
+  setupSwagger(app);
 }
