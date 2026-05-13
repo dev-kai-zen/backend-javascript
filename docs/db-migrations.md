@@ -1,6 +1,6 @@
 # Database migrations guide
 
-This project uses **Sequelize CLI** with **MySQL**. Migrations live in `database/migrations/` as JavaScript files (CommonJS). The CLI reads `DATABASE_URL` from your environment via `database/config/database.cjs` (CommonJS; `.cjs` so it works beside app ESM in `src/`), aligned with the runtime app (`src/config/sequelize-config.js`).
+This project uses **Sequelize CLI** with **MySQL**. The app uses **ESM** (`package.json` has `"type": "module"`), so migration files must use the **`.cjs`** extension and **`module.exports`** — plain **`.js`** migrations are parsed as ES modules and `module` is undefined. The CLI reads `DATABASE_URL` from your environment via `database/config/database.cjs`, aligned with the runtime app (`src/config/sequelize-config.js`).
 
 ## Prerequisites
 
@@ -40,7 +40,7 @@ npm run migration:create -- create-index-on-audit-timestamp
 
 That runs `sequelize-cli migration:generate` and creates a file such as:
 
-`database/migrations/20260512120000-create-orders.js`
+`database/migrations/20260512120000-create-orders.cjs` (rename generated `.js` to `.cjs` in this repo)
 
 Open the new file and implement `up` and `down`.
 
@@ -77,7 +77,7 @@ module.exports = {
 
 See existing files for full examples:
 
-- `database/migrations/20260520100001-create-users.js`
+- `database/migrations/20260520100001-create-users.cjs`
 - `database/migrations/20260520100013-create-audit-logs.js`
 
 ### Application models vs migrations
