@@ -19,11 +19,18 @@ function optional(name, fallback) {
 
 const nodeEnv = optional("NODE_ENV", "development");
 
+const databaseUrl = `mysql://${required("DB_USER")}:${required("DB_PASSWORD")}@${required("DB_HOST")}:${required("DB_PORT")}/${required("DB_NAME")}`;
+
 export const env = {
   nodeEnv,
   isDevelopment: nodeEnv === "development",
   port: Number(process.env.PORT) || 3000,
-  databaseUrl: required("DATABASE_URL"),
+  dbName: required("DB_NAME"),
+  dbUser: required("DB_USER"),
+  dbPassword: required("DB_PASSWORD"),
+  dbHost: required("DB_HOST"),
+  dbPort: required("DB_PORT"),
+  databaseUrl,
   jwtSecret: required("JWT_SECRET"),
   googleClientId: required("GOOGLE_CLIENT_ID"),
   frontendOrigin: optional("FRONTEND_ORIGIN", "http://localhost:5173"),
