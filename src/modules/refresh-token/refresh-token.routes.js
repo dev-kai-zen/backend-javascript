@@ -9,7 +9,7 @@ import {
 } from "./refresh-token.controller.js";
 
 /**
- * Mounted at `/api/v1/refresh-tokens` (see `shared/routes/v1/modules-routes.js`).
+ * Mounted at `/api/v1/refresh-tokens` (see this module’s `routes.register.js`).
  */
 export const refreshTokenRoutes = Router();
 

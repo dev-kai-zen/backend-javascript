@@ -11,7 +11,7 @@ import {
 } from "./users.controller.js";
 
 /**
- * Mounted at `/api/v1/users` (see `shared/routes/v1/modules-routes.js`).
+ * Mounted at `/api/v1/users` (see this module’s `routes.register.js`).
  */
 export const usersRoutes = Router();
 

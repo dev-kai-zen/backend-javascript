@@ -20,7 +20,7 @@ export function applyMiddlewares(app) {
   app.use(cookieParser());
   app.use(express.json());
 
-  // Rate limits for `/api/v1` are applied in `shared/routes/index.js` (see `rate-limiter.js`).
+  // Baseline rate limit for all `/api/v1` traffic (see `rate-limiter.js`). Modules may add stricter limits in `routes.register.js`.
   app.use("/api/v1", apiRateLimiter);
 
   setupSwagger(app);

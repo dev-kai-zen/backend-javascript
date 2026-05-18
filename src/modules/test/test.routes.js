@@ -5,7 +5,7 @@ import routesGuard from "../../shared/middlewares/routes-guard.js";
 
 /**
  * Test / sample routes for this feature module.
- * These paths are relative to where this router is mounted (see `modules-routes.ts`).
+ * These paths are relative to `/api/v1/test` (see this module’s `routes.register.js`).
  *
  * Mounted at `/api/v1/test` — e.g. `GET /api/v1/test/protected/me`.
  */

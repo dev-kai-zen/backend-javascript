@@ -1,14 +1,15 @@
 import "dotenv/config";
 
-/** Registers all Sequelize models + associations (`shared/models`). */
-import "./shared/models/index.js";
-
 import { createApp } from "./app.js";
+import { registerModuleModels } from "./bootstrap/register-module-models.js";
+import { buildV1ModulesRouter } from "./bootstrap/register-module-routes.js";
 import { env } from "./config/env-config.js";
 import { sequelize } from "./config/sequelize-config.js";
 
 async function start() {
-  const app = createApp();
+  await registerModuleModels();
+  const v1ModulesRouter = await buildV1ModulesRouter();
+  const app = createApp(v1ModulesRouter);
 
   await sequelize.authenticate();
   console.log("Database connection OK");

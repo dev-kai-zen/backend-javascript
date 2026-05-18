@@ -3,7 +3,7 @@ import { Router } from "express";
 import { createUserLog, listUserLogs } from "./user-logs.controller.js";
 
 /**
- * Mounted at `/api/v1/user-logs` (see `shared/routes/v1/modules-routes.js`).
+ * Mounted at `/api/v1/user-logs` (see this module’s `routes.register.js`).
  */
 export const userLogsRoutes = Router();
 
