@@ -1,10 +1,6 @@
 import { env } from "../../config/env-config.js";
 import { buildUserPayload } from "./google-auth.payload.js";
-import {
-  getMe,
-  loginWithGoogleIdToken,
-  refreshAccessToken,
-} from "./google-auth.service.js";
+import * as googleAuthService from "./google-auth.service.js";
 
 /** Cookie name for the long-lived refresh JWT (httpOnly, not readable from JS). */
 const REFRESH_COOKIE_NAME = "refresh_token";
@@ -39,7 +35,7 @@ export async function login(req, res) {
     }
 
     const { accessToken, refreshToken, user } =
-      await loginWithGoogleIdToken(googleToken);
+      await googleAuthService.loginWithGoogleIdToken(googleToken);
 
     res.cookie(REFRESH_COOKIE_NAME, refreshToken, {
       ...refreshCookieBase(),

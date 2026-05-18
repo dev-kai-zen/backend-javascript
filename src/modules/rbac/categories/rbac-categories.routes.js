@@ -1,17 +1,11 @@
 import { Router } from "express";
 
-import {
-  createCategory,
-  deleteCategory,
-  getCategory,
-  listCategories,
-  updateCategory,
-} from "./rbac-categories.controller.js";
+import * as rbacCategoriesController from "./rbac-categories.controller.js";
 
 export const rbacCategoriesRoutes = Router();
 
-rbacCategoriesRoutes.get("/", listCategories);
-rbacCategoriesRoutes.post("/", createCategory);
-rbacCategoriesRoutes.get("/:id", getCategory);
-rbacCategoriesRoutes.patch("/:id", updateCategory);
-rbacCategoriesRoutes.delete("/:id", deleteCategory);
+rbacCategoriesRoutes.get("/", rbacCategoriesController.listCategories);
+rbacCategoriesRoutes.post("/", rbacCategoriesController.createCategory);
+rbacCategoriesRoutes.get("/:id", rbacCategoriesController.getCategory);
+rbacCategoriesRoutes.patch("/:id", rbacCategoriesController.updateCategory);
+rbacCategoriesRoutes.delete("/:id", rbacCategoriesController.deleteCategory);

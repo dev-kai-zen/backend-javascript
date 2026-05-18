@@ -1,10 +1,4 @@
-import {
-  createRefreshToken as createRefreshTokenRepo,
-  deleteRefreshToken as deleteRefreshTokenRepo,
-  getRefreshToken as getRefreshTokenRepo,
-  listRefreshTokens as listRefreshTokensRepo,
-  revokeRefreshToken as revokeRefreshTokenRepo,
-} from "./refresh-token.repository.js";
+import * as refreshTokenRepository from "./refresh-token.repository.js";
 
 /**
  * @param {string | undefined} userIdRaw
@@ -63,7 +57,7 @@ export async function createRefreshToken(body) {
     throw new Error("expiresAt must be a valid ISO date string");
   }
 
-  return createRefreshTokenRepo({
+  return refreshTokenRepository.createRefreshToken({
     userId,
     token,
     expiresAt,
@@ -74,14 +68,14 @@ export async function createRefreshToken(body) {
  * @param {number} id
  */
 export async function getRefreshToken(id) {
-  return getRefreshTokenRepo(id);
+  return refreshTokenRepository.getRefreshToken(id);
 }
 
 /**
  * @param {number} id
  */
 export async function deleteRefreshToken(id) {
-  return deleteRefreshTokenRepo(id);
+  return refreshTokenRepository.deleteRefreshToken(id);
 }
 
 /**
@@ -98,5 +92,5 @@ export async function revokeRefreshToken(body) {
   if (token.length > 512) {
     throw new Error("token must be at most 512 characters");
   }
-  return revokeRefreshTokenRepo(token);
+  return refreshTokenRepository.revokeRefreshToken(token);
 }

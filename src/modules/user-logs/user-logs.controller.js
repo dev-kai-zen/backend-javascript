@@ -1,7 +1,4 @@
-import {
-  createUserLog as createUserLogService,
-  listUserLogs as listUserLogsService,
-} from "./user-logs.service.js";
+import * as userLogsService from "./user-logs.service.js";
 
 /**
  * @param {unknown} val
@@ -23,7 +20,7 @@ function firstQueryString(val) {
  */
 export async function listUserLogs(req, res) {
   try {
-    const logs = await listUserLogsService(
+    const logs = await userLogsService.listUserLogs(
       firstQueryString(req.query.userId),
       firstQueryString(req.query.action),
       firstQueryString(req.query.module),
@@ -43,7 +40,7 @@ export async function listUserLogs(req, res) {
  */
 export async function createUserLog(req, res) {
   try {
-    const log = await createUserLogService(req.body);
+    const log = await userLogsService.createUserLog(req.body);
     return res.status(201).json(log);
   } catch (err) {
     console.error("createUserLog:", err);

@@ -1,17 +1,11 @@
 import { Router } from "express";
 
-import {
-  createPermission,
-  deletePermission,
-  getPermission,
-  listPermissions,
-  updatePermission,
-} from "./rbac-permissions.controller.js";
+import * as rbacPermissionsController from "./rbac-permissions.controller.js";
 
 export const rbacPermissionsRoutes = Router();
 
-rbacPermissionsRoutes.get("/", listPermissions);
-rbacPermissionsRoutes.post("/", createPermission);
-rbacPermissionsRoutes.get("/:id", getPermission);
-rbacPermissionsRoutes.patch("/:id", updatePermission);
-rbacPermissionsRoutes.delete("/:id", deletePermission);
+rbacPermissionsRoutes.get("/", rbacPermissionsController.listPermissions);
+rbacPermissionsRoutes.post("/", rbacPermissionsController.createPermission);
+rbacPermissionsRoutes.get("/:id", rbacPermissionsController.getPermission);
+rbacPermissionsRoutes.patch("/:id", rbacPermissionsController.updatePermission);
+rbacPermissionsRoutes.delete("/:id", rbacPermissionsController.deletePermission);

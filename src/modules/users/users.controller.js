@@ -1,12 +1,6 @@
 import { UniqueConstraintError } from "sequelize";
 
-import {
-  createUser as createUserService,
-  deleteUser as deleteUserService,
-  getUserById as getUserByIdService,
-  getUsers as getUsersService,
-  updateUser as updateUserService,
-} from "./users.service.js";
+import * as usersService from "./users.service.js";
 
 function parseId(raw) {
   const id = Number.parseInt(String(raw), 10);
@@ -22,7 +16,7 @@ function parseId(raw) {
  */
 export async function createUser(req, res) {
   try {
-    const user = await createUserService(req.body);
+    const user = await usersService.createUser(req.body);
     return res.status(201).json(user);
   } catch (err) {
     if (
@@ -45,7 +39,7 @@ export async function createUser(req, res) {
  */
 export async function getUsers(req, res) {
   try {
-    const users = await getUsersService(req.query.limit, req.query.offset);
+    const users = await usersService.getUsers(req.query.limit, req.query.offset);
     return res.json({ data: users });
   } catch (err) {
     const message = err instanceof Error ? err.message : "failed to list users";
@@ -63,7 +57,7 @@ export async function getUserById(req, res) {
     return res.status(400).json({ message: "invalid id" });
   }
   try {
-    const user = await getUserByIdService(id);
+    const user = await usersService.getUserById(id);
     if (!user) {
       return res.status(404).json({ message: "user not found" });
     }
@@ -84,7 +78,7 @@ export async function updateUser(req, res) {
     return res.status(400).json({ message: "invalid id" });
   }
   try {
-    const user = await updateUserService(id, req.body);
+    const user = await usersService.updateUser(id, req.body);
     if (!user) {
       return res.status(404).json({ message: "user not found" });
     }
@@ -114,7 +108,7 @@ export async function deleteUser(req, res) {
     return res.status(400).json({ message: "invalid id" });
   }
   try {
-    const ok = await deleteUserService(id);
+    const ok = await usersService.deleteUser(id);
     if (!ok) {
       return res.status(404).json({ message: "user not found" });
     }

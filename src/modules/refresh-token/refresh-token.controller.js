@@ -1,13 +1,6 @@
 import { UniqueConstraintError } from "sequelize";
 
-import {
-  createRefreshToken as createRefreshTokenService,
-  deleteRefreshToken as deleteRefreshTokenService,
-  getRefreshToken as getRefreshTokenService,
-  listRefreshTokens as listRefreshTokensService,
-  parseListFilters,
-  revokeRefreshToken as revokeRefreshTokenService,
-} from "./refresh-token.service.js";
+import * as refreshTokenService from "./refresh-token.service.js";
 
 /**
  * @param {unknown} val
@@ -42,7 +35,7 @@ function parseId(raw) {
 export async function listRefreshTokens(req, res) {
   try {
     const filters = parseListFilters(firstQueryString(req.query.userId));
-    const rows = await listRefreshTokensService(filters);
+    const rows = await refreshTokenService.listRefreshTokens(filters);
     return res.json({ data: rows });
   } catch (err) {
     console.error("listRefreshTokens:", err);
@@ -56,7 +49,7 @@ export async function listRefreshTokens(req, res) {
  */
 export async function createRefreshToken(req, res) {
   try {
-    const row = await createRefreshTokenService(req.body);
+    const row = await refreshTokenService.createRefreshToken(req.body);
     return res.status(201).json(row);
   } catch (err) {
     console.error("createRefreshToken:", err);
@@ -83,7 +76,7 @@ export async function getRefreshToken(req, res) {
     return res.status(400).json({ message: "Invalid id" });
   }
   try {
-    const row = await getRefreshTokenService(id);
+    const row = await refreshTokenService.getRefreshToken(id);
     if (!row) {
       return res.status(404).json({ message: "Refresh token not found" });
     }
@@ -104,7 +97,7 @@ export async function deleteRefreshToken(req, res) {
     return res.status(400).json({ message: "Invalid id" });
   }
   try {
-    const deleted = await deleteRefreshTokenService(id);
+    const deleted = await refreshTokenService.deleteRefreshToken(id);
     if (!deleted) {
       return res.status(404).json({ message: "Refresh token not found" });
     }
@@ -121,7 +114,7 @@ export async function deleteRefreshToken(req, res) {
  */
 export async function revokeRefreshToken(req, res) {
   try {
-    const deleted = await revokeRefreshTokenService(req.body);
+    const deleted = await refreshTokenService.revokeRefreshToken(req.body);
     if (!deleted) {
       return res.status(404).json({ message: "Refresh token not found" });
     }

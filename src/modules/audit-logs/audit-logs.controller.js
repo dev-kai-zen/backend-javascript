@@ -1,4 +1,4 @@
-import { listAuditLogs as listAuditLogsService } from "./audit-logs.service.js";
+import * as auditLogsService from "./audit-logs.service.js";
 
 /**
  * @param {unknown} val
@@ -20,7 +20,7 @@ function firstQueryString(val) {
  */
 export async function listAuditLogs(req, res) {
   try {
-    const logs = await listAuditLogsService(
+    const logs = await auditLogsService.listAuditLogs(
       firstQueryString(req.query.action),
       firstQueryString(req.query.entity_type),
       firstQueryString(req.query.limit),
@@ -33,4 +33,4 @@ export async function listAuditLogs(req, res) {
       message: "Failed to list audit logs",
     });
   }
-}
+};

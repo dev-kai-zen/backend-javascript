@@ -1,6 +1,6 @@
 import { UniqueConstraintError } from "sequelize";
 
-import * as rolesService from "./rbac-roles.service.js";
+import * as rbacRolesService from "./rbac-roles.service.js";
 
 /**
  * @param {unknown} raw
@@ -52,7 +52,7 @@ function parseUpdateRoleBody(body) {
  */
 export async function listRoles(_req, res) {
   try {
-    const roles = await rolesService.listRoles();
+    const roles = await rbacRolesService.listRoles();
     return res.json({ data: roles });
   } catch (err) {
     console.error("listRoles:", err);
@@ -79,7 +79,7 @@ export async function createRole(req, res) {
     roleDescription = body.roleDescription;
   }
   try {
-    const role = await rolesService.createRole({
+    const role = await rbacRolesService.createRole({
       roleName: body.roleName,
       roleDescription,
     });
@@ -109,7 +109,7 @@ export async function getRole(req, res) {
     return res.status(400).json({ message: "Invalid id" });
   }
   try {
-    const role = await rolesService.getRole(id);
+    const role = await rbacRolesService.getRole(id);
     if (!role) {
       return res.status(404).json({ message: "Role not found" });
     }
@@ -137,7 +137,7 @@ export async function updateRole(req, res) {
     return res.status(400).json({ message });
   }
   try {
-    const role = await rolesService.updateRole(id, patch);
+    const role = await rbacRolesService.updateRole(id, patch);
     if (!role) {
       return res.status(404).json({ message: "Role not found" });
     }
@@ -167,7 +167,7 @@ export async function deleteRole(req, res) {
     return res.status(400).json({ message: "Invalid id" });
   }
   try {
-    const deleted = await rolesService.deleteRole(id);
+    const deleted = await rbacRolesService.deleteRole(id);
     if (!deleted) {
       return res.status(404).json({ message: "Role not found" });
     }

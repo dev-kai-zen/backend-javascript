@@ -1,4 +1,4 @@
-import * as rolesRepository from "../roles/rbac-roles.repository.js";
+import * as rbacRolesService from "../roles/rbac-roles.service.js";
 import * as rbacRolePermissionsRepository from "./rbac-role-permissions.repository.js";
 
 /**
@@ -6,7 +6,7 @@ import * as rbacRolePermissionsRepository from "./rbac-role-permissions.reposito
  * @param {number[]} permissionIds
  */
 export async function setRolePermissions(roleId, permissionIds) {
-  const role = await rolesRepository.getRole(roleId);
+  const role = await rbacRolesService.getRole(roleId);
   if (!role) {
     return null;
   }

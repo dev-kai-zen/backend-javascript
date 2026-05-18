@@ -1,7 +1,4 @@
-import {
-  createUserLog as createUserLogRepo,
-  listUserLogs as listUserLogsRepo,
-} from "./user-logs.repository.js";
+import * as userLogsRepository from "./user-logs.repository.js";
 
 const DEFAULT_LIMIT = 50;
 const MAX_LIMIT = 200;
@@ -158,7 +155,7 @@ export async function createUserLog(body) {
     }
   }
 
-  return createUserLogRepo({
+  return userLogsRepository.createUserLog({
     userId,
     action,
     module: moduleVal,

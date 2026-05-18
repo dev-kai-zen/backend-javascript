@@ -1,7 +1,7 @@
-import * as rolesRepository from "./rbac-roles.repository.js";
+import * as rbacRolesRepository from "./rbac-roles.repository.js";
 
 export async function listRoles() {
-  return rolesRepository.listRoles();
+  return rbacRolesRepository.listRoles();
 }
 
 /**
@@ -11,7 +11,7 @@ export async function createRole(data) {
   if (!data.roleName || data.roleName.trim() === "") {
     throw new Error("roleName is required");
   }
-  return rolesRepository.createRole({
+  return rbacRolesRepository.createRole({
     roleName: data.roleName.trim(),
     roleDescription: data.roleDescription ?? null,
   });
@@ -21,7 +21,7 @@ export async function createRole(data) {
  * @param {number} id
  */
 export async function getRole(id) {
-  return rolesRepository.getRole(id);
+  return rbacRolesRepository.getRole(id);
 }
 
 /**
@@ -49,19 +49,19 @@ export async function updateRole(id, data) {
   if (Object.keys(patch).length === 0) {
     throw new Error("No fields to update");
   }
-  return rolesRepository.updateRole(id, patch);
+  return rbacRolesRepository.updateRole(id, patch);
 }
 
 /**
  * @param {number} id
  */
 export async function deleteRole(id) {
-  return rolesRepository.deleteRole(id);
+  return rbacRolesRepository.deleteRole(id);
 }
 
 /**
  * @param {string[]} roleNames
  */
 export async function roleDefinitionsEligibleForGuard(roleNames) {
-  return rolesRepository.roleDefinitionsEligibleForGuard(roleNames);
+  return rbacRolesRepository.roleDefinitionsEligibleForGuard(roleNames);
 }

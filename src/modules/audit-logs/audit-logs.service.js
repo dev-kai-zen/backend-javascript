@@ -1,8 +1,4 @@
-import {
-  createAuditLog as createAuditLogRepo,
-  createAuditLogs as createAuditLogsRepo,
-  listAuditLogs as listAuditLogsRepo,
-} from "./audit-logs.repository.js";
+import * as auditLogsRepository from "./audit-logs.repository.js";
 
 const DEFAULT_LIMIT = 50;
 const MAX_LIMIT = 200;
@@ -44,7 +40,6 @@ export async function listAuditLogs(action, entity_type, limit, offset) {
     filters.entity_type = entity_type;
   }
 
-  return listAuditLogsRepo(filters, { limit: lim, offset: off });
+  return auditLogsRepository.listAuditLogs(filters, { limit: lim, offset: off });
 }
 
-export { createAuditLogRepo as createAuditLog, createAuditLogsRepo as createAuditLogs };
