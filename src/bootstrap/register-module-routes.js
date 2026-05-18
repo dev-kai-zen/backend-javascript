@@ -5,14 +5,13 @@ import {
   MODULES_DIR,
 } from "./discover-module-registers.js";
 
-const DEFAULT_ROUTE_ORDER = 1_000;
-
 /**
  * Builds the `/api/v1` router from each `src/modules/<name>/routes.register.js`.
  *
  * New HTTP surface: add that file in your module only. Export:
  * - `registerV1Routes(v1Router)` — mount your feature Router(s) on `v1Router`
- * - optional `routeRegistrationOrder` — lower runs first (default 1000; tie-break by folder name)
+ *
+ * Registrars run in ascending order by module folder name.
  */
 export async function buildV1ModulesRouter() {
   const registrars = await listModuleRegisterImports(
@@ -20,7 +19,7 @@ export async function buildV1ModulesRouter() {
     "routes.register.js",
   );
 
-  /** @type {{ name: string, order: number, register: (r: import("express").Router) => void }[]} */
+  /** @type {{ name: string, register: (r: import("express").Router) => void }[]} */
   const discovered = [];
 
   for (const { name, url } of registrars) {
@@ -33,18 +32,10 @@ export async function buildV1ModulesRouter() {
       );
     }
 
-    const order =
-      typeof mod.routeRegistrationOrder === "number"
-        ? mod.routeRegistrationOrder
-        : DEFAULT_ROUTE_ORDER;
-
-    discovered.push({ name, order, register });
+    discovered.push({ name, register });
   }
 
-  discovered.sort((a, b) => {
-    if (a.order !== b.order) return a.order - b.order;
-    return a.name.localeCompare(b.name);
-  });
+  discovered.sort((a, b) => a.name.localeCompare(b.name));
 
   const v1Router = Router();
 
