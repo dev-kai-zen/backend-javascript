@@ -1,0 +1,62 @@
+services:
+  db:
+    image: mysql:8.4
+    container_name: backend-js-mysql
+    environment:
+      MYSQL_DATABASE: boilerplate_js_db
+      MYSQL_USER: boilerplate_js
+      MYSQL_PASSWORD: boilerplate_js_pass
+      MYSQL_ROOT_PASSWORD: root_boilerplate_js_local
+    ports:
+      # 3308 avoids clashing with backend-typescript Compose (typically 3307:3306).
+      - "3308:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "127.0.0.1",
+          "-uroot",
+          "-proot_boilerplate_js_local",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 15s
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: backend-js-api
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "${API_PORT:-3000}:3000"
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      # Sequelize CLI (`database/config/database.cjs`) and the app both use DATABASE_URL.
+      DATABASE_URL: mysql://boilerplate_js:boilerplate_js_pass@db:3306/boilerplate_js_db
+      # `env-config.js` also requires discrete DB_* fields (hostname `db` is the Compose service).
+      DB_NAME: boilerplate_js_db
+      DB_USER: boilerplate_js
+      DB_PASSWORD: boilerplate_js_pass
+      DB_HOST: db
+      DB_PORT: "3306"
+      JWT_SECRET: ${JWT_SECRET:-change-me-docker-compose-use-long-random-secret}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-353225171076-cjfmj00lkitvau28je78horfa0ic4k50.apps.googleusercontent.com}
+      FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://localhost:5173}
+      # Optional local convenience only — run migrations before `node src/index.js`:
+      # RUN_MIGRATIONS_ON_START: "true"
+
+volumes:
+  mysql_data:
