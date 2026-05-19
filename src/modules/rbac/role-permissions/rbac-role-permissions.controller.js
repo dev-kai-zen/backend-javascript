@@ -3,6 +3,11 @@ import {
   UniqueConstraintError,
 } from "sequelize";
 
+import {
+  sendError,
+  sendSuccess,
+  sendValidationError,
+} from "../../../shared/http/api-response.js";
 import * as rbacRolePermissionsService from "./rbac-role-permissions.service.js";
 
 /**
@@ -20,14 +25,20 @@ function parsePathId(raw) {
 export async function listRolePermissions(req, res) {
   const roleId = parsePathId(req.params.id);
   if (roleId === null) {
-    return res.status(400).json({ message: "Invalid role id" });
+    return sendValidationError(res, { message: "Invalid role id" });
   }
   try {
     const rows = await rbacRolePermissionsService.listRolePermissions(roleId);
-    return res.json({ data: rows });
+    return sendSuccess(res, {
+      message: "Role permissions fetched successfully",
+      data: rows,
+    });
   } catch (err) {
     console.error("listRolePermissions:", err);
-    return res.status(500).json({ message: "Failed to list role permissions" });
+    return sendError(res, {
+      message: "Failed to list role permissions",
+      statusCode: 500,
+    });
   }
 }
 
@@ -38,7 +49,7 @@ export async function listRolePermissions(req, res) {
 export async function setRolePermissions(req, res) {
   const roleId = parsePathId(req.params.id);
   if (roleId === null) {
-    return res.status(400).json({ message: "Invalid role id" });
+    return sendValidationError(res, { message: "Invalid role id" });
   }
   try {
     const rows = await rbacRolePermissionsService.setRolePermissions(
@@ -46,29 +57,36 @@ export async function setRolePermissions(req, res) {
       req.body,
     );
     if (!rows) {
-      return res.status(404).json({ message: "Role not found" });
+      return sendError(res, { message: "Role not found", statusCode: 404 });
     }
-    return res.json({ data: rows });
+    return sendSuccess(res, {
+      message: "Role permissions updated successfully",
+      data: rows,
+    });
   } catch (err) {
     console.error("setRolePermissions:", err);
     if (
       err instanceof ForeignKeyConstraintError ||
       err.name === "SequelizeForeignKeyConstraintError"
     ) {
-      return res.status(400).json({
-        message: "One or more permission ids do not exist",
-      });
+      return sendValidationError(res, { message: "One or more permission ids do not exist" });
     }
     if (
       err instanceof UniqueConstraintError ||
       err.name === "SequelizeUniqueConstraintError"
     ) {
-      return res.status(409).json({ message: "Duplicate permission id in request" });
+      return sendError(res, {
+        message: "Duplicate permission id in request",
+        statusCode: 409,
+      });
     }
     if (err instanceof Error) {
-      return res.status(400).json({ message: err.message });
+      return sendValidationError(res, { message: err.message });
     }
-    return res.status(500).json({ message: "Failed to set role permissions" });
+    return sendError(res, {
+      message: "Failed to set role permissions",
+      statusCode: 500,
+    });
   }
 }
 
@@ -79,28 +97,36 @@ export async function setRolePermissions(req, res) {
 export async function createRolePermission(req, res) {
   const roleId = parsePathId(req.params.id);
   if (roleId === null) {
-    return res.status(400).json({ message: "Invalid role id" });
+    return sendValidationError(res, { message: "Invalid role id" });
   }
   try {
     const row = await rbacRolePermissionsService.createRolePermission(
       roleId,
       req.body,
     );
-    return res.status(201).json(row);
+    return sendSuccess(res, {
+      message: "Permission assigned to role successfully",
+      statusCode: 201,
+      data: row,
+    });
   } catch (err) {
     console.error("createRolePermission:", err);
     if (
       err instanceof UniqueConstraintError ||
       err.name === "SequelizeUniqueConstraintError"
     ) {
-      return res
-        .status(409)
-        .json({ message: "This permission is already assigned to the role" });
+      return sendError(res, {
+        message: "This permission is already assigned to the role",
+        statusCode: 409,
+      });
     }
     if (err instanceof Error) {
-      return res.status(400).json({ message: err.message });
+      return sendValidationError(res, { message: err.message });
     }
-    return res.status(500).json({ message: "Failed to assign permission to role" });
+    return sendError(res, {
+      message: "Failed to assign permission to role",
+      statusCode: 500,
+    });
   }
 }
 
@@ -112,7 +138,7 @@ export async function deleteRolePermission(req, res) {
   const roleId = parsePathId(req.params.id);
   const permissionId = parsePathId(req.params.permissionId);
   if (roleId === null || permissionId === null) {
-    return res.status(400).json({ message: "Invalid role id or permissionId" });
+    return sendValidationError(res, { message: "Invalid role id or permissionId" });
   }
   try {
     const deleted = await rbacRolePermissionsService.deleteRolePermission(
@@ -120,11 +146,20 @@ export async function deleteRolePermission(req, res) {
       permissionId,
     );
     if (!deleted) {
-      return res.status(404).json({ message: "Role permission link not found" });
+      return sendError(res, {
+        message: "Role permission link not found",
+        statusCode: 404,
+      });
     }
-    return res.status(204).send();
+    return sendSuccess(res, {
+      message: "Role permission removed successfully",
+      data: null,
+    });
   } catch (err) {
     console.error("deleteRolePermission:", err);
-    return res.status(500).json({ message: "Failed to remove role permission" });
+    return sendError(res, {
+      message: "Failed to remove role permission",
+      statusCode: 500,
+    });
   }
 }

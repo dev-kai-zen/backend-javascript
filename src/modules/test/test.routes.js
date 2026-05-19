@@ -1,5 +1,6 @@
 import { Router } from "express";
 
+import { sendSuccess } from "../../shared/http/api-response.js";
 import { authenticateJwt } from "../../shared/middlewares/auth-middleware.js";
 import routesGuard from "../../shared/middlewares/routes-guard.js";
 
@@ -12,21 +13,30 @@ import routesGuard from "../../shared/middlewares/routes-guard.js";
 export const testRoutes = Router();
 
 testRoutes.get("/", (_req, res) => {
-  res.json({ message: "backend-javascript APIs" });
+  return sendSuccess(res, {
+    message: "backend-javascript APIs",
+    data: null,
+  });
 });
 
 testRoutes.get("/health", (_req, res) => {
-  res.json({ status: "API is running" });
+  return sendSuccess(res, {
+    message: "API is running",
+    data: { healthy: true },
+  });
 });
 
 /** Valid Bearer access JWT only (`authenticateJwt`). */
 testRoutes.get("/protected/me", authenticateJwt, (req, res) => {
   const user = req.authUser;
-  res.json({
-    userId: user.id,
-    email: user.email,
-    rolesFromJwt: req.roles ?? [],
-    permissionsFromJwt: req.permissions ?? [],
+  return sendSuccess(res, {
+    message: "Authenticated",
+    data: {
+      userId: user.id,
+      email: user.email,
+      rolesFromJwt: req.roles ?? [],
+      permissionsFromJwt: req.permissions ?? [],
+    },
   });
 });
 
@@ -39,7 +49,10 @@ testRoutes.get(
     source: "token",
   }),
   (_req, res) => {
-    res.json({ message: "OK — JWT contained a matching role" });
+    return sendSuccess(res, {
+      message: "OK — JWT contained a matching role",
+      data: null,
+    });
   },
 );
 
@@ -52,8 +65,9 @@ testRoutes.get(
     source: "db",
   }),
   (_req, res) => {
-    res.json({
+    return sendSuccess(res, {
       message: "OK — current DB RBAC grants the required permission code",
+      data: null,
     });
   },
 );

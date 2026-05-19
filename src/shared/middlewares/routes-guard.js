@@ -1,3 +1,4 @@
+import { sendError } from "../http/api-response.js";
 import * as rbacPermissionsService from "../../modules/rbac/permissions/rbac-permissions.service.js";
 import * as rbacRolePermissionsService from "../../modules/rbac/role-permissions/rbac-role-permissions.service.js";
 import * as rbacRolesService from "../../modules/rbac/roles/rbac-roles.service.js";
@@ -30,14 +31,14 @@ export default function routesGuard(options) {
   return async function routesGuardMiddleware(req, res, next) {
     const authUser = req.authUser;
     if (!authUser) {
-      return res.status(403).json({ message: "Forbidden" });
+      return sendError(res, { message: "Forbidden", statusCode: 403 });
     }
 
     if (
       roleOpt &&
       !(await rbacRolesService.roleDefinitionsEligibleForGuard(roleOpt))
     ) {
-      return res.status(403).json({ message: "Forbidden" });
+      return sendError(res, { message: "Forbidden", statusCode: 403 });
     }
     if (
       permOpt &&
@@ -45,7 +46,7 @@ export default function routesGuard(options) {
         permOpt,
       ))
     ) {
-      return res.status(403).json({ message: "Forbidden" });
+      return sendError(res, { message: "Forbidden", statusCode: 403 });
     }
 
     /** @type {{ roles: string[]; permissions: string[] }} */
@@ -76,12 +77,12 @@ export default function routesGuard(options) {
 
     if (roleOpt) {
       if (!roleOpt.some((role) => principal.roles.includes(role))) {
-        return res.status(403).json({ message: "Forbidden" });
+        return sendError(res, { message: "Forbidden", statusCode: 403 });
       }
     }
     if (permOpt) {
       if (!permOpt.every((p) => principal.permissions.includes(p))) {
-        return res.status(403).json({ message: "Forbidden" });
+        return sendError(res, { message: "Forbidden", statusCode: 403 });
       }
     }
 

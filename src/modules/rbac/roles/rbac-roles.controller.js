@@ -1,5 +1,10 @@
 import { UniqueConstraintError } from "sequelize";
 
+import {
+  sendError,
+  sendSuccess,
+  sendValidationError,
+} from "../../../shared/http/api-response.js";
 import * as rbacRolesService from "./rbac-roles.service.js";
 
 /**
@@ -17,10 +22,13 @@ function parsePathId(raw) {
 export async function listRoles(_req, res) {
   try {
     const roles = await rbacRolesService.listRoles();
-    return res.json({ data: roles });
+    return sendSuccess(res, {
+      message: "Roles fetched successfully",
+      data: roles,
+    });
   } catch (err) {
     console.error("listRoles:", err);
-    return res.status(500).json({ message: "Failed to list roles" });
+    return sendError(res, { message: "Failed to list roles", statusCode: 500 });
   }
 }
 
@@ -31,19 +39,26 @@ export async function listRoles(_req, res) {
 export async function createRole(req, res) {
   try {
     const role = await rbacRolesService.createRole(req.body);
-    return res.status(201).json(role);
+    return sendSuccess(res, {
+      message: "Role created successfully",
+      statusCode: 201,
+      data: role,
+    });
   } catch (err) {
     console.error("createRole:", err);
     if (
       err instanceof UniqueConstraintError ||
       err.name === "SequelizeUniqueConstraintError"
     ) {
-      return res.status(409).json({ message: "roleName already exists" });
+      return sendError(res, {
+        message: "roleName already exists",
+        statusCode: 409,
+      });
     }
     if (err instanceof Error) {
-      return res.status(400).json({ message: err.message });
+      return sendValidationError(res, { message: err.message });
     }
-    return res.status(500).json({ message: "Failed to create role" });
+    return sendError(res, { message: "Failed to create role", statusCode: 500 });
   }
 }
 
@@ -54,17 +69,20 @@ export async function createRole(req, res) {
 export async function getRole(req, res) {
   const id = parsePathId(req.params.id);
   if (id === null) {
-    return res.status(400).json({ message: "Invalid id" });
+    return sendValidationError(res, { message: "Invalid id" });
   }
   try {
     const role = await rbacRolesService.getRole(id);
     if (!role) {
-      return res.status(404).json({ message: "Role not found" });
+      return sendError(res, { message: "Role not found", statusCode: 404 });
     }
-    return res.json(role);
+    return sendSuccess(res, {
+      message: "Role fetched successfully",
+      data: role,
+    });
   } catch (err) {
     console.error("getRole:", err);
-    return res.status(500).json({ message: "Failed to get role" });
+    return sendError(res, { message: "Failed to get role", statusCode: 500 });
   }
 }
 
@@ -75,26 +93,32 @@ export async function getRole(req, res) {
 export async function updateRole(req, res) {
   const id = parsePathId(req.params.id);
   if (id === null) {
-    return res.status(400).json({ message: "Invalid id" });
+    return sendValidationError(res, { message: "Invalid id" });
   }
   try {
     const role = await rbacRolesService.updateRole(id, req.body);
     if (!role) {
-      return res.status(404).json({ message: "Role not found" });
+      return sendError(res, { message: "Role not found", statusCode: 404 });
     }
-    return res.json(role);
+    return sendSuccess(res, {
+      message: "Role updated successfully",
+      data: role,
+    });
   } catch (err) {
     console.error("updateRole:", err);
     if (
       err instanceof UniqueConstraintError ||
       err.name === "SequelizeUniqueConstraintError"
     ) {
-      return res.status(409).json({ message: "roleName already exists" });
+      return sendError(res, {
+        message: "roleName already exists",
+        statusCode: 409,
+      });
     }
     if (err instanceof Error) {
-      return res.status(400).json({ message: err.message });
+      return sendValidationError(res, { message: err.message });
     }
-    return res.status(500).json({ message: "Failed to update role" });
+    return sendError(res, { message: "Failed to update role", statusCode: 500 });
   }
 }
 
@@ -105,16 +129,19 @@ export async function updateRole(req, res) {
 export async function deleteRole(req, res) {
   const id = parsePathId(req.params.id);
   if (id === null) {
-    return res.status(400).json({ message: "Invalid id" });
+    return sendValidationError(res, { message: "Invalid id" });
   }
   try {
     const deleted = await rbacRolesService.deleteRole(id);
     if (!deleted) {
-      return res.status(404).json({ message: "Role not found" });
+      return sendError(res, { message: "Role not found", statusCode: 404 });
     }
-    return res.status(204).send();
+    return sendSuccess(res, {
+      message: "Role deleted successfully",
+      data: null,
+    });
   } catch (err) {
     console.error("deleteRole:", err);
-    return res.status(500).json({ message: "Failed to delete role" });
+    return sendError(res, { message: "Failed to delete role", statusCode: 500 });
   }
 }

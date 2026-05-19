@@ -1,4 +1,5 @@
 import { env } from "../../config/env-config.js";
+import { sendError, sendSuccess, sendValidationError } from "../../shared/http/api-response.js";
 import { buildUserPayload } from "./google-auth.payload.js";
 import * as googleAuthService from "./google-auth.service.js";
 
@@ -28,10 +29,7 @@ export async function login(req, res) {
   try {
     const googleToken = req.body?.googleToken;
     if (typeof googleToken !== "string" || googleToken.trim() === "") {
-      return res.status(400).json({
-        success: false,
-        message: "Google Token is required",
-      });
+      return sendValidationError(res, { message: "Google Token is required" });
     }
 
     const { accessToken, refreshToken, user } =
@@ -42,8 +40,7 @@ export async function login(req, res) {
       maxAge: REFRESH_COOKIE_MAX_MS,
     });
 
-    return res.json({
-      success: true,
+    return sendSuccess(res, {
       message: "Login successful",
       data: {
         accessToken,
@@ -53,13 +50,13 @@ export async function login(req, res) {
     });
   } catch (err) {
     if (err?.statusCode != null) {
-      return res.status(err.statusCode).json({
-        success: false,
+      return sendError(res, {
         message: err.message,
+        statusCode: err.statusCode,
       });
     }
     console.error("google-auth login:", err);
-    return res.status(500).json({ success: false, message: "Login failed" });
+    return sendError(res, { message: "Login failed", statusCode: 500 });
   }
 }
 
@@ -72,30 +69,30 @@ export async function refresh(req, res) {
     const raw = req.cookies?.[REFRESH_COOKIE_NAME];
     if (typeof raw !== "string" || raw.trim() === "") {
       clearRefreshCookie(res);
-      return res.status(401).json({
-        success: false,
+      return sendError(res, {
         message: "Not authenticated",
+        statusCode: 401,
       });
     }
 
-    const accessToken = await refreshAccessToken(raw);
-    return res.json({
-      success: true,
+    const accessToken =
+      await googleAuthService.refreshAccessToken(raw);
+    return sendSuccess(res, {
       message: "Token refreshed",
       data: { accessToken },
     });
   } catch (err) {
     clearRefreshCookie(res);
     if (err?.statusCode != null) {
-      return res.status(err.statusCode).json({
-        success: false,
+      return sendError(res, {
         message: err.message,
+        statusCode: err.statusCode,
       });
     }
     console.error("google-auth refresh:", err);
-    return res.status(401).json({
-      success: false,
+    return sendError(res, {
       message: "Not authenticated",
+      statusCode: 401,
     });
   }
 }
@@ -106,10 +103,9 @@ export async function refresh(req, res) {
  */
 export async function logout(_req, res) {
   clearRefreshCookie(res);
-  return res.json({
-    success: true,
+  return sendSuccess(res, {
     message: "Logged out successfully",
-    data: {},
+    data: null,
   });
 }
 
@@ -121,11 +117,10 @@ export async function me(req, res) {
   try {
     const user = req.authUser;
     if (!user?.id) {
-      return res.status(401).json({ success: false, message: "Unauthorized" });
+      return sendError(res, { message: "Unauthorized", statusCode: 401 });
     }
-    const fresh = await getMe(user.id);
-    return res.json({
-      success: true,
+    const fresh = await googleAuthService.getMe(user.id);
+    return sendSuccess(res, {
       message: "User details fetched",
       data: {
         user: buildUserPayload(fresh.user),
@@ -134,14 +129,15 @@ export async function me(req, res) {
     });
   } catch (err) {
     if (err?.statusCode != null) {
-      return res.status(err.statusCode).json({
-        success: false,
+      return sendError(res, {
         message: err.message,
+        statusCode: err.statusCode,
       });
     }
     console.error("google-auth me:", err);
-    return res
-      .status(500)
-      .json({ success: false, message: "Failed to load profile" });
+    return sendError(res, {
+      message: "Failed to load profile",
+      statusCode: 500,
+    });
   }
 }

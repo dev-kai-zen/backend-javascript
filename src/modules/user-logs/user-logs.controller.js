@@ -1,3 +1,8 @@
+import {
+  sendError,
+  sendSuccess,
+  sendValidationError,
+} from "../../shared/http/api-response.js";
 import * as userLogsService from "./user-logs.service.js";
 
 /**
@@ -27,10 +32,16 @@ export async function listUserLogs(req, res) {
       firstQueryString(req.query.limit),
       firstQueryString(req.query.offset),
     );
-    return res.json({ data: logs });
+    return sendSuccess(res, {
+      message: "User logs fetched successfully",
+      data: logs,
+    });
   } catch (err) {
     console.error("listUserLogs:", err);
-    return res.status(500).json({ message: "Failed to list user logs" });
+    return sendError(res, {
+      message: "Failed to list user logs",
+      statusCode: 500,
+    });
   }
 }
 
@@ -41,12 +52,19 @@ export async function listUserLogs(req, res) {
 export async function createUserLog(req, res) {
   try {
     const log = await userLogsService.createUserLog(req.body);
-    return res.status(201).json(log);
+    return sendSuccess(res, {
+      message: "User log created successfully",
+      statusCode: 201,
+      data: log,
+    });
   } catch (err) {
     console.error("createUserLog:", err);
     if (err instanceof Error) {
-      return res.status(400).json({ message: err.message });
+      return sendValidationError(res, { message: err.message });
     }
-    return res.status(500).json({ message: "Failed to create user log" });
+    return sendError(res, {
+      message: "Failed to create user log",
+      statusCode: 500,
+    });
   }
 }

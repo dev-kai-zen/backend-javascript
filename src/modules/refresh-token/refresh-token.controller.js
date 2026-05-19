@@ -1,5 +1,10 @@
 import { UniqueConstraintError } from "sequelize";
 
+import {
+  sendError,
+  sendSuccess,
+  sendValidationError,
+} from "../../shared/http/api-response.js";
 import * as refreshTokenService from "./refresh-token.service.js";
 
 /**
@@ -34,12 +39,20 @@ function parseId(raw) {
  */
 export async function listRefreshTokens(req, res) {
   try {
-    const filters = parseListFilters(firstQueryString(req.query.userId));
+    const filters = refreshTokenService.parseListFilters(
+      firstQueryString(req.query.userId),
+    );
     const rows = await refreshTokenService.listRefreshTokens(filters);
-    return res.json({ data: rows });
+    return sendSuccess(res, {
+      message: "Refresh tokens fetched successfully",
+      data: rows,
+    });
   } catch (err) {
     console.error("listRefreshTokens:", err);
-    return res.status(500).json({ message: "Failed to list refresh tokens" });
+    return sendError(res, {
+      message: "Failed to list refresh tokens",
+      statusCode: 500,
+    });
   }
 }
 
@@ -50,19 +63,29 @@ export async function listRefreshTokens(req, res) {
 export async function createRefreshToken(req, res) {
   try {
     const row = await refreshTokenService.createRefreshToken(req.body);
-    return res.status(201).json(row);
+    return sendSuccess(res, {
+      message: "Refresh token created successfully",
+      statusCode: 201,
+      data: row,
+    });
   } catch (err) {
     console.error("createRefreshToken:", err);
     if (
       err instanceof UniqueConstraintError ||
       err.name === "SequelizeUniqueConstraintError"
     ) {
-      return res.status(409).json({ message: "token value already exists" });
+      return sendError(res, {
+        message: "token value already exists",
+        statusCode: 409,
+      });
     }
     if (err instanceof Error) {
-      return res.status(400).json({ message: err.message });
+      return sendValidationError(res, { message: err.message });
     }
-    return res.status(500).json({ message: "Failed to create refresh token" });
+    return sendError(res, {
+      message: "Failed to create refresh token",
+      statusCode: 500,
+    });
   }
 }
 
@@ -73,17 +96,26 @@ export async function createRefreshToken(req, res) {
 export async function getRefreshToken(req, res) {
   const id = parseId(req.params.id);
   if (id === null) {
-    return res.status(400).json({ message: "Invalid id" });
+    return sendValidationError(res, { message: "Invalid id" });
   }
   try {
     const row = await refreshTokenService.getRefreshToken(id);
     if (!row) {
-      return res.status(404).json({ message: "Refresh token not found" });
+      return sendError(res, {
+        message: "Refresh token not found",
+        statusCode: 404,
+      });
     }
-    return res.json(row);
+    return sendSuccess(res, {
+      message: "Refresh token fetched successfully",
+      data: row,
+    });
   } catch (err) {
     console.error("getRefreshToken:", err);
-    return res.status(500).json({ message: "Failed to get refresh token" });
+    return sendError(res, {
+      message: "Failed to get refresh token",
+      statusCode: 500,
+    });
   }
 }
 
@@ -94,17 +126,26 @@ export async function getRefreshToken(req, res) {
 export async function deleteRefreshToken(req, res) {
   const id = parseId(req.params.id);
   if (id === null) {
-    return res.status(400).json({ message: "Invalid id" });
+    return sendValidationError(res, { message: "Invalid id" });
   }
   try {
     const deleted = await refreshTokenService.deleteRefreshToken(id);
     if (!deleted) {
-      return res.status(404).json({ message: "Refresh token not found" });
+      return sendError(res, {
+        message: "Refresh token not found",
+        statusCode: 404,
+      });
     }
-    return res.status(204).send();
+    return sendSuccess(res, {
+      message: "Refresh token deleted successfully",
+      data: null,
+    });
   } catch (err) {
     console.error("deleteRefreshToken:", err);
-    return res.status(500).json({ message: "Failed to delete refresh token" });
+    return sendError(res, {
+      message: "Failed to delete refresh token",
+      statusCode: 500,
+    });
   }
 }
 
@@ -116,14 +157,23 @@ export async function revokeRefreshToken(req, res) {
   try {
     const deleted = await refreshTokenService.revokeRefreshToken(req.body);
     if (!deleted) {
-      return res.status(404).json({ message: "Refresh token not found" });
+      return sendError(res, {
+        message: "Refresh token not found",
+        statusCode: 404,
+      });
     }
-    return res.status(204).send();
+    return sendSuccess(res, {
+      message: "Refresh token revoked successfully",
+      data: null,
+    });
   } catch (err) {
     console.error("revokeRefreshToken:", err);
     if (err instanceof Error) {
-      return res.status(400).json({ message: err.message });
+      return sendValidationError(res, { message: err.message });
     }
-    return res.status(500).json({ message: "Failed to revoke refresh token" });
+    return sendError(res, {
+      message: "Failed to revoke refresh token",
+      statusCode: 500,
+    });
   }
 }

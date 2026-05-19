@@ -1,5 +1,10 @@
 import { UniqueConstraintError } from "sequelize";
 
+import {
+  sendError,
+  sendSuccess,
+  sendValidationError,
+} from "../../../shared/http/api-response.js";
 import * as rbacPermissionsService from "./rbac-permissions.service.js";
 
 /**
@@ -16,7 +21,6 @@ function firstQueryString(val) {
 }
 
 /**
- * Parse list query categoryId like TS zod transform
  * @param {string | undefined} categoryIdRaw
  */
 function parseListCategoryId(categoryIdRaw) {
@@ -50,10 +54,16 @@ export async function listPermissions(req, res) {
   }
   try {
     const rows = await rbacPermissionsService.listPermissions(filters);
-    return res.json({ data: rows });
+    return sendSuccess(res, {
+      message: "Permissions fetched successfully",
+      data: rows,
+    });
   } catch (err) {
     console.error("listPermissions:", err);
-    return res.status(500).json({ message: "Failed to list permissions" });
+    return sendError(res, {
+      message: "Failed to list permissions",
+      statusCode: 500,
+    });
   }
 }
 
@@ -64,19 +74,29 @@ export async function listPermissions(req, res) {
 export async function createPermission(req, res) {
   try {
     const row = await rbacPermissionsService.createPermission(req.body);
-    return res.status(201).json(row);
+    return sendSuccess(res, {
+      message: "Permission created successfully",
+      statusCode: 201,
+      data: row,
+    });
   } catch (err) {
     console.error("createPermission:", err);
     if (
       err instanceof UniqueConstraintError ||
       err.name === "SequelizeUniqueConstraintError"
     ) {
-      return res.status(409).json({ message: "permissionCode already exists" });
+      return sendError(res, {
+        message: "permissionCode already exists",
+        statusCode: 409,
+      });
     }
     if (err instanceof Error) {
-      return res.status(400).json({ message: err.message });
+      return sendValidationError(res, { message: err.message });
     }
-    return res.status(500).json({ message: "Failed to create permission" });
+    return sendError(res, {
+      message: "Failed to create permission",
+      statusCode: 500,
+    });
   }
 }
 
@@ -87,17 +107,23 @@ export async function createPermission(req, res) {
 export async function getPermission(req, res) {
   const id = parsePathId(req.params.id);
   if (id === null) {
-    return res.status(400).json({ message: "Invalid id" });
+    return sendValidationError(res, { message: "Invalid id" });
   }
   try {
     const row = await rbacPermissionsService.getPermission(id);
     if (!row) {
-      return res.status(404).json({ message: "Permission not found" });
+      return sendError(res, { message: "Permission not found", statusCode: 404 });
     }
-    return res.json(row);
+    return sendSuccess(res, {
+      message: "Permission fetched successfully",
+      data: row,
+    });
   } catch (err) {
     console.error("getPermission:", err);
-    return res.status(500).json({ message: "Failed to get permission" });
+    return sendError(res, {
+      message: "Failed to get permission",
+      statusCode: 500,
+    });
   }
 }
 
@@ -108,26 +134,35 @@ export async function getPermission(req, res) {
 export async function updatePermission(req, res) {
   const id = parsePathId(req.params.id);
   if (id === null) {
-    return res.status(400).json({ message: "Invalid id" });
+    return sendValidationError(res, { message: "Invalid id" });
   }
   try {
     const row = await rbacPermissionsService.updatePermission(id, req.body);
     if (!row) {
-      return res.status(404).json({ message: "Permission not found" });
+      return sendError(res, { message: "Permission not found", statusCode: 404 });
     }
-    return res.json(row);
+    return sendSuccess(res, {
+      message: "Permission updated successfully",
+      data: row,
+    });
   } catch (err) {
     console.error("updatePermission:", err);
     if (
       err instanceof UniqueConstraintError ||
       err.name === "SequelizeUniqueConstraintError"
     ) {
-      return res.status(409).json({ message: "permissionCode already exists" });
+      return sendError(res, {
+        message: "permissionCode already exists",
+        statusCode: 409,
+      });
     }
     if (err instanceof Error) {
-      return res.status(400).json({ message: err.message });
+      return sendValidationError(res, { message: err.message });
     }
-    return res.status(500).json({ message: "Failed to update permission" });
+    return sendError(res, {
+      message: "Failed to update permission",
+      statusCode: 500,
+    });
   }
 }
 
@@ -138,16 +173,22 @@ export async function updatePermission(req, res) {
 export async function deletePermission(req, res) {
   const id = parsePathId(req.params.id);
   if (id === null) {
-    return res.status(400).json({ message: "Invalid id" });
+    return sendValidationError(res, { message: "Invalid id" });
   }
   try {
     const deleted = await rbacPermissionsService.deletePermission(id);
     if (!deleted) {
-      return res.status(404).json({ message: "Permission not found" });
+      return sendError(res, { message: "Permission not found", statusCode: 404 });
     }
-    return res.status(204).send();
+    return sendSuccess(res, {
+      message: "Permission deleted successfully",
+      data: null,
+    });
   } catch (err) {
     console.error("deletePermission:", err);
-    return res.status(500).json({ message: "Failed to delete permission" });
+    return sendError(res, {
+      message: "Failed to delete permission",
+      statusCode: 500,
+    });
   }
 }

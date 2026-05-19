@@ -1,4 +1,5 @@
 import { User } from "../../modules/users/users.model.js";
+import { sendError } from "../http/api-response.js";
 import { verifyAccessTokenPayload } from "../services/jwt-service.js";
 
 /**
@@ -12,7 +13,7 @@ import { verifyAccessTokenPayload } from "../services/jwt-service.js";
 export async function authenticateJwt(req, res, next) {
   const header = req.headers.authorization;
   if (!header?.startsWith("Bearer ")) {
-    return res.status(401).json({ success: false, message: "Unauthorized" });
+    return sendError(res, { message: "Unauthorized", statusCode: 401 });
   }
 
   const token = header.slice("Bearer ".length).trim();
@@ -21,14 +22,15 @@ export async function authenticateJwt(req, res, next) {
   try {
     payload = verifyAccessTokenPayload(token);
   } catch {
-    return res
-      .status(401)
-      .json({ success: false, message: "Invalid or expired token" });
+    return sendError(res, {
+      message: "Invalid or expired token",
+      statusCode: 401,
+    });
   }
 
   const user = await User.findByPk(payload.sub);
   if (!user || !user.is_active) {
-    return res.status(401).json({ success: false, message: "Unauthorized" });
+    return sendError(res, { message: "Unauthorized", statusCode: 401 });
   }
 
   req.authUser = user;

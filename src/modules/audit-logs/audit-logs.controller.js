@@ -1,3 +1,8 @@
+import {
+  sendError,
+  sendSuccess,
+  sendValidationError,
+} from "../../shared/http/api-response.js";
 import * as auditLogsService from "./audit-logs.service.js";
 
 /**
@@ -26,11 +31,15 @@ export async function listAuditLogs(req, res) {
       firstQueryString(req.query.limit),
       firstQueryString(req.query.offset),
     );
-    return res.json({ data: logs });
+    return sendSuccess(res, {
+      message: "Audit logs fetched successfully",
+      data: logs,
+    });
   } catch (err) {
     console.error("listAuditLogs:", err);
-    return res.status(500).json({
+    return sendError(res, {
       message: "Failed to list audit logs",
+      statusCode: 500,
     });
   }
 }
@@ -42,12 +51,19 @@ export async function listAuditLogs(req, res) {
 export async function createAuditLogs(req, res) {
   try {
     const rows = await auditLogsService.createAuditLogs(req.body);
-    return res.status(201).json({ data: rows });
+    return sendSuccess(res, {
+      message: "Audit logs created successfully",
+      statusCode: 201,
+      data: rows,
+    });
   } catch (err) {
     console.error("createAuditLogs:", err);
     if (err instanceof Error) {
-      return res.status(400).json({ message: err.message });
+      return sendValidationError(res, { message: err.message });
     }
-    return res.status(500).json({ message: "Failed to create audit logs" });
+    return sendError(res, {
+      message: "Failed to create audit logs",
+      statusCode: 500,
+    });
   }
 }
