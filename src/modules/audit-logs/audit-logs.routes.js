@@ -8,3 +8,4 @@ import * as auditLogsController from "./audit-logs.controller.js";
 export const auditLogsRoutes = Router();
 
 auditLogsRoutes.get("/", auditLogsController.listAuditLogs);
+auditLogsRoutes.post("/", auditLogsController.createAuditLogs);

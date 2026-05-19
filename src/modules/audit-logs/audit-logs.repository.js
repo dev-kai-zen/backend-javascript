@@ -36,21 +36,25 @@ export async function listAuditLogs(filters, options) {
  *   user_agent?: string | null;
  *   timestamp?: Date;
  * }} input
+ * @param {{ transaction?: import("sequelize").Transaction }} [options]
  * @returns {Promise<import("./audit-logs.model.js").AuditLog>}
  */
-export async function createAuditLog(input) {
-  return AuditLog.create({
-    user_id: input.user_id ?? null,
-    action: input.action,
-    entity_type: input.entity_type,
-    entity_id: input.entity_id ?? null,
-    old_values: input.old_values ?? null,
-    new_values: input.new_values ?? null,
-    change_fields: input.change_fields ?? null,
-    ip_address: input.ip_address ?? null,
-    user_agent: input.user_agent ?? null,
-    timestamp: input.timestamp ?? new Date(),
-  });
+export async function createAuditLog(input, options = {}) {
+  return AuditLog.create(
+    {
+      user_id: input.user_id ?? null,
+      action: input.action,
+      entity_type: input.entity_type,
+      entity_id: input.entity_id ?? null,
+      old_values: input.old_values ?? null,
+      new_values: input.new_values ?? null,
+      change_fields: input.change_fields ?? null,
+      ip_address: input.ip_address ?? null,
+      user_agent: input.user_agent ?? null,
+      timestamp: input.timestamp ?? new Date(),
+    },
+    options,
+  );
 }
 
 /**
@@ -66,9 +70,10 @@ export async function createAuditLog(input) {
  *   user_agent?: string | null;
  *   timestamp?: Date;
  * }>} inputs
+ * @param {{ transaction?: import("sequelize").Transaction }} [options]
  * @returns {Promise<import("./audit-logs.model.js").AuditLog[]>}
  */
-export async function createAuditLogs(inputs) {
+export async function createAuditLogs(inputs, options = {}) {
   if (inputs.length === 0) {
     return [];
   }
@@ -85,6 +90,6 @@ export async function createAuditLogs(inputs) {
       user_agent: input.user_agent ?? null,
       timestamp: input.timestamp ?? new Date(),
     })),
-    { validate: true },
+    { ...options, validate: true },
   );
 }

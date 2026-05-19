@@ -33,4 +33,21 @@ export async function listAuditLogs(req, res) {
       message: "Failed to list audit logs",
     });
   }
-};
+}
+
+/**
+ * @param {import("express").Request} req
+ * @param {import("express").Response} res
+ */
+export async function createAuditLogs(req, res) {
+  try {
+    const rows = await auditLogsService.createAuditLogs(req.body);
+    return res.status(201).json({ data: rows });
+  } catch (err) {
+    console.error("createAuditLogs:", err);
+    if (err instanceof Error) {
+      return res.status(400).json({ message: err.message });
+    }
+    return res.status(500).json({ message: "Failed to create audit logs" });
+  }
+}

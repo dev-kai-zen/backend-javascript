@@ -29,4 +29,42 @@
  *         description: OK
  *       500:
  *         description: Server error
+ *   post:
+ *     tags: [Audit logs]
+ *     summary: Create audit logs (bulk)
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [logs]
+ *             properties:
+ *               logs:
+ *                 type: array
+ *                 minItems: 1
+ *                 items:
+ *                   type: object
+ *                   required: [action, entity_type]
+ *                   properties:
+ *                     user_id: { type: integer, nullable: true }
+ *                     action: { type: string }
+ *                     entity_type: { type: string }
+ *                     entity_id: { type: string, nullable: true }
+ *                     old_values: { type: object, nullable: true }
+ *                     new_values: { type: object, nullable: true }
+ *                     change_fields:
+ *                       type: array
+ *                       items: { type: string }
+ *                       nullable: true
+ *                     ip_address: { type: string, nullable: true }
+ *                     user_agent: { type: string, nullable: true }
+ *                     timestamp: { type: string, format: date-time }
+ *     responses:
+ *       201:
+ *         description: Created
+ *       400:
+ *         description: Validation error
+ *       500:
+ *         description: Server error
  */
