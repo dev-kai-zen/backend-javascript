@@ -72,11 +72,31 @@ The bootstrap discovers every module that has `models.register.js` and `routes.r
 { "status": true|false, "message": "...", "data": ... }
 ```
 
+## Testing
+
+Tests use **Jest** and **Supertest** (ES modules). A `jest.setup.js` file sets minimal env vars so unit tests do not require a running database.
+
+| Command | Purpose |
+|---------|---------|
+| `npm test` | Run all tests under `src/tests/` |
+| `npm run test:watch` | Run tests in watch mode |
+| `npm run test:scan` | List source files with / without tests |
+| `npm run test:gen` | Scaffold missing tests in `src/tests/generated/` |
+
+**Layout**
+
+- `src/tests/` — hand-written unit and integration tests (preferred)
+- `src/tests/helpers/create-test-app.js` — builds Express app with all `/api/v1` routes for HTTP tests
+- `src/tests/generated/` — optional stubs from `test:gen` (safe to fill in over time)
+
+**Examples included:** `api-response`, `parse-input`, `users.schemas`, `users.controller` (mocked service), `test.routes` integration (`/api/v1/test`, `/health`).
+
 ## Useful scripts
 
 | Command | Purpose |
 |---------|---------|
 | `npm run dev` | Start with nodemon |
+| `npm test` | Run Jest test suite |
 | `npm run migration:create -- <name>` | New migration (`.cjs` in `database/migrations/`) |
 | `npm run migration:up` / `migration:down` | Apply / undo last migration |
 | `npm run seed:all` | Run seeders |
