@@ -1,5 +1,7 @@
-import { sequelize } from "../../config/sequelize-config.js";
+import { withTransaction } from "../../shared/db/with-transaction.js";
+import { parseInput } from "../../shared/validation/parse-input.js";
 import * as userLogsRepository from "./user-logs.repository.js";
+import { createUserLogBodySchema } from "./user-logs.schemas.js";
 
 const DEFAULT_LIMIT = 50;
 const MAX_LIMIT = 200;
@@ -51,6 +53,14 @@ function trimmedOrUndefined(raw) {
 }
 
 /**
+ * @param {unknown} value
+ * @returns {string | null}
+ */
+function nullableString(value) {
+  return typeof value === "string" ? value : null;
+}
+
+/**
  * @param {string | undefined} userId
  * @param {string | undefined} action
  * @param {string | undefined} moduleName
@@ -89,120 +99,33 @@ export async function listUserLogs(
 }
 
 /**
- * @param {unknown} v
- * @returns {string | null}
- */
-function asNullableString(v) {
-  return typeof v === "string" ? v : null;
-}
-
-/**
- * @param {{
- *   userId: number | null;
- *   action: string;
- *   module: string | null;
- *   description: string | null;
- *   method: string | null;
- *   route: string | null;
- *   statusCode: number | null;
- *   ipAddress: string | null;
- *   userAgent: string | null;
- *   deviceType: string | null;
- *   browser: string | null;
- *   os: string | null;
- *   sessionId: string | null;
- *   metadata: Record<string, unknown> | null;
- * }} payload
- * @param {{ transaction?: import("sequelize").Transaction }} [options]
- */
-async function _createUserLog(body, options = {}) {
-  if (!body || typeof body !== "object" || Array.isArray(body)) {
-    throw new Error("request body is required");
-  }
-
-  if (typeof body.action !== "string" || !body.action.trim()) {
-    throw new Error("action is required");
-  }
-  const action = body.action.trim();
-  if (action === "") {
-    throw new Error("action is required");
-  }
-
-  let userId = null;
-  if ("userId" in body && body.userId !== undefined) {
-    if (body.userId === null) {
-      userId = null;
-    } else {
-      const n = Number(body.userId);
-      if (!Number.isFinite(n)) {
-        throw new Error("userId must be a number or null");
-      }
-      userId = n;
-    }
-  }
-
-  const moduleVal =
-    typeof body.module === "string" ? body.module.trim() || null : null;
-
-  let statusCode = null;
-  if ("statusCode" in body && body.statusCode !== undefined) {
-    if (body.statusCode === null) {
-      statusCode = null;
-    } else {
-      const n = Number(body.statusCode);
-      if (!Number.isFinite(n)) {
-        throw new Error("statusCode must be a finite number or null");
-      }
-      statusCode = n;
-    }
-  }
-
-  /** @type {Record<string, unknown> | null} */
-  let metadata = null;
-  if ("metadata" in body && body.metadata !== undefined) {
-    if (body.metadata === null) {
-      metadata = null;
-    } else if (
-      typeof body.metadata === "object" &&
-      !Array.isArray(body.metadata)
-    ) {
-      metadata = /** @type {Record<string, unknown>} */ (body.metadata);
-    } else {
-      throw new Error("metadata must be a plain object or null");
-    }
-  }
-
-  const payload = {
-    userId,
-    action,
-    module: moduleVal,
-    description: asNullableString(body.description),
-    method: asNullableString(body.method),
-    route: asNullableString(body.route),
-    statusCode,
-    ipAddress: asNullableString(body.ipAddress),
-    userAgent: asNullableString(body.userAgent),
-    deviceType: asNullableString(body.deviceType),
-    browser: asNullableString(body.browser),
-    os: asNullableString(body.os),
-    sessionId: asNullableString(body.sessionId),
-    metadata,
-  };
-
-  return userLogsRepository.createUserLog(payload, options);
-}
-
-/**
  * @param {unknown} body
- * @param {{ transaction?: import("sequelize").Transaction }} [options]
+ * @param {import("../../shared/db/with-transaction.js").DbOptions} [options]
  */
 export async function createUserLog(body, options = {}) {
-
-  if (options.transaction) {
-    return _createUserLog(body, options);
-  }
-
-  return sequelize.transaction(async (transaction) => {
-    return _createUserLog(body, { ...options, transaction });
-  });
+  return withTransaction(async (opts) => {
+    const parsed = parseInput(createUserLogBodySchema, body);
+    return userLogsRepository.createUserLog(
+      {
+        userId: parsed.userId ?? null,
+        action: parsed.action,
+        module:
+          typeof parsed.module === "string"
+            ? parsed.module.trim() || null
+            : null,
+        description: nullableString(parsed.description),
+        method: nullableString(parsed.method),
+        route: nullableString(parsed.route),
+        statusCode: parsed.statusCode ?? null,
+        ipAddress: nullableString(parsed.ipAddress),
+        userAgent: nullableString(parsed.userAgent),
+        deviceType: nullableString(parsed.deviceType),
+        browser: nullableString(parsed.browser),
+        os: nullableString(parsed.os),
+        sessionId: nullableString(parsed.sessionId),
+        metadata: parsed.metadata ?? null,
+      },
+      opts,
+    );
+  }, options);
 }

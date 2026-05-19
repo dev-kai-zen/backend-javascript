@@ -40,24 +40,10 @@ export async function setRolePermissions(req, res) {
   if (roleId === null) {
     return res.status(400).json({ message: "Invalid role id" });
   }
-  const body = req.body;
-  if (!body || !Array.isArray(body.permissionIds)) {
-    return res.status(400).json({ message: "permissionIds array is required" });
-  }
-  const permissionIds = [];
-  for (const p of body.permissionIds) {
-    const n = Number(p);
-    if (!Number.isInteger(n) || n < 1) {
-      return res.status(400).json({
-        message: "each permission id must be a positive integer",
-      });
-    }
-    permissionIds.push(n);
-  }
   try {
     const rows = await rbacRolePermissionsService.setRolePermissions(
       roleId,
-      permissionIds,
+      req.body,
     );
     if (!rows) {
       return res.status(404).json({ message: "Role not found" });
@@ -79,6 +65,9 @@ export async function setRolePermissions(req, res) {
     ) {
       return res.status(409).json({ message: "Duplicate permission id in request" });
     }
+    if (err instanceof Error) {
+      return res.status(400).json({ message: err.message });
+    }
     return res.status(500).json({ message: "Failed to set role permissions" });
   }
 }
@@ -92,18 +81,11 @@ export async function createRolePermission(req, res) {
   if (roleId === null) {
     return res.status(400).json({ message: "Invalid role id" });
   }
-  const body = req.body;
-  const permissionId = Number(body?.permissionId);
-  if (!Number.isInteger(permissionId) || permissionId < 1) {
-    return res.status(400).json({
-      message: "permissionId must be a positive integer",
-    });
-  }
   try {
-    const row = await rbacRolePermissionsService.createRolePermission({
+    const row = await rbacRolePermissionsService.createRolePermission(
       roleId,
-      permissionId,
-    });
+      req.body,
+    );
     return res.status(201).json(row);
   } catch (err) {
     console.error("createRolePermission:", err);
@@ -114,6 +96,9 @@ export async function createRolePermission(req, res) {
       return res
         .status(409)
         .json({ message: "This permission is already assigned to the role" });
+    }
+    if (err instanceof Error) {
+      return res.status(400).json({ message: err.message });
     }
     return res.status(500).json({ message: "Failed to assign permission to role" });
   }

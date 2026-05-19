@@ -29,18 +29,8 @@ export async function listCategories(_req, res) {
  * @param {import("express").Response} res
  */
 export async function createCategory(req, res) {
-  const body = req.body;
-  if (
-    !body ||
-    typeof body.categoryName !== "string" ||
-    !body.categoryName.trim()
-  ) {
-    return res.status(400).json({ message: "categoryName is required" });
-  }
   try {
-    const row = await rbacCategoriesService.createCategory({
-      categoryName: body.categoryName,
-    });
+    const row = await rbacCategoriesService.createCategory(req.body);
     return res.status(201).json(row);
   } catch (err) {
     console.error("createCategory:", err);
@@ -87,18 +77,8 @@ export async function updateCategory(req, res) {
   if (id === null) {
     return res.status(400).json({ message: "Invalid id" });
   }
-  const body = req.body;
-  if (
-    !body ||
-    typeof body.categoryName !== "string" ||
-    !body.categoryName.trim()
-  ) {
-    return res.status(400).json({ message: "categoryName is required" });
-  }
   try {
-    const row = await rbacCategoriesService.updateCategory(id, {
-      categoryName: body.categoryName,
-    });
+    const row = await rbacCategoriesService.updateCategory(id, req.body);
     if (!row) {
       return res.status(404).json({ message: "Category not found" });
     }

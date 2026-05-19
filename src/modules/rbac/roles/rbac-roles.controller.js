@@ -11,42 +11,6 @@ function parsePathId(raw) {
 }
 
 /**
- * @param {unknown} body
- */
-function parseUpdateRoleBody(body) {
-  if (!body || typeof body !== "object" || Array.isArray(body)) {
-    throw new Error("request body is required");
-  }
-  /** @type {{ roleName?: string; roleDescription?: string | null; isActive?: boolean }} */
-  const patch = {};
-  if ("roleName" in body) {
-    if (typeof body.roleName !== "string") {
-      throw new Error("roleName must be a string");
-    }
-    patch.roleName = body.roleName;
-  }
-  if ("roleDescription" in body) {
-    if (
-      body.roleDescription !== null &&
-      typeof body.roleDescription !== "string"
-    ) {
-      throw new Error("roleDescription must be a string or null");
-    }
-    patch.roleDescription = body.roleDescription;
-  }
-  if ("isActive" in body) {
-    if (typeof body.isActive !== "boolean") {
-      throw new Error("isActive must be a boolean");
-    }
-    patch.isActive = body.isActive;
-  }
-  if (Object.keys(patch).length === 0) {
-    throw new Error("No fields to update");
-  }
-  return patch;
-}
-
-/**
  * @param {import("express").Request} req
  * @param {import("express").Response} res
  */
@@ -65,24 +29,8 @@ export async function listRoles(_req, res) {
  * @param {import("express").Response} res
  */
 export async function createRole(req, res) {
-  const body = req.body;
-  if (!body || typeof body.roleName !== "string" || !body.roleName.trim()) {
-    return res.status(400).json({ message: "roleName is required" });
-  }
-  let roleDescription = null;
-  if ("roleDescription" in body && body.roleDescription !== undefined) {
-    if (body.roleDescription !== null && typeof body.roleDescription !== "string") {
-      return res
-        .status(400)
-        .json({ message: "roleDescription must be a string or null" });
-    }
-    roleDescription = body.roleDescription;
-  }
   try {
-    const role = await rbacRolesService.createRole({
-      roleName: body.roleName,
-      roleDescription,
-    });
+    const role = await rbacRolesService.createRole(req.body);
     return res.status(201).json(role);
   } catch (err) {
     console.error("createRole:", err);
@@ -129,15 +77,8 @@ export async function updateRole(req, res) {
   if (id === null) {
     return res.status(400).json({ message: "Invalid id" });
   }
-  let patch;
   try {
-    patch = parseUpdateRoleBody(req.body);
-  } catch (e) {
-    const message = e instanceof Error ? e.message : "Invalid body";
-    return res.status(400).json({ message });
-  }
-  try {
-    const role = await rbacRolesService.updateRole(id, patch);
+    const role = await rbacRolesService.updateRole(id, req.body);
     if (!role) {
       return res.status(404).json({ message: "Role not found" });
     }

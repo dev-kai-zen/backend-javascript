@@ -36,94 +36,6 @@ function parsePathId(raw) {
 }
 
 /**
- * @param {unknown} body
- */
-function parseCreatePermissionBody(body) {
-  if (!body || typeof body !== "object" || Array.isArray(body)) {
-    throw new Error("request body is required");
-  }
-  if (typeof body.permissionCode !== "string" || !body.permissionCode.trim()) {
-    throw new Error("permissionCode is required");
-  }
-  let permissionDescription = null;
-  if (
-    "permissionDescription" in body &&
-    body.permissionDescription !== undefined
-  ) {
-    if (body.permissionDescription !== null) {
-      if (typeof body.permissionDescription !== "string") {
-        throw new Error("permissionDescription must be a string or null");
-      }
-      permissionDescription = body.permissionDescription;
-    }
-  }
-  let categoryId = null;
-  if ("categoryId" in body && body.categoryId !== undefined) {
-    if (body.categoryId === null) {
-      categoryId = null;
-    } else {
-      const n = Number(body.categoryId);
-      if (!Number.isInteger(n) || n < 0) {
-        throw new Error("categoryId must be a non-negative integer or null");
-      }
-      categoryId = n;
-    }
-  }
-  return {
-    permissionCode: body.permissionCode,
-    permissionDescription,
-    categoryId,
-  };
-}
-
-/**
- * @param {unknown} body
- */
-function parseUpdatePermissionBody(body) {
-  if (!body || typeof body !== "object" || Array.isArray(body)) {
-    throw new Error("request body is required");
-  }
-  /** @type {{ permissionCode?: string; permissionDescription?: string | null; categoryId?: number | null; isActive?: boolean }} */
-  const patch = {};
-  if ("permissionCode" in body) {
-    if (typeof body.permissionCode !== "string") {
-      throw new Error("permissionCode must be a string");
-    }
-    patch.permissionCode = body.permissionCode;
-  }
-  if ("permissionDescription" in body) {
-    if (
-      body.permissionDescription !== null &&
-      typeof body.permissionDescription !== "string"
-    ) {
-      throw new Error("permissionDescription must be a string or null");
-    }
-    patch.permissionDescription = body.permissionDescription;
-  }
-  if ("categoryId" in body) {
-    if (body.categoryId === null) {
-      patch.categoryId = null;
-    } else {
-      const n = Number(body.categoryId);
-      if (!Number.isInteger(n) || n < 0) {
-        throw new Error("categoryId must be a non-negative integer or null");
-      }
-      patch.categoryId = n;
-    }
-  }
-  if ("isActive" in body) {
-    if (typeof body.isActive !== "boolean") {
-      throw new Error("isActive must be a boolean");
-    }
-    patch.isActive = body.isActive;
-  }
-  if (Object.keys(patch).length === 0) {
-    throw new Error("No fields to update");
-  }
-  return patch;
-}
-
-/**
  * @param {import("express").Request} req
  * @param {import("express").Response} res
  */
@@ -150,15 +62,8 @@ export async function listPermissions(req, res) {
  * @param {import("express").Response} res
  */
 export async function createPermission(req, res) {
-  let payload;
   try {
-    payload = parseCreatePermissionBody(req.body);
-  } catch (e) {
-    const message = e instanceof Error ? e.message : "Invalid body";
-    return res.status(400).json({ message });
-  }
-  try {
-    const row = await rbacPermissionsService.createPermission(payload);
+    const row = await rbacPermissionsService.createPermission(req.body);
     return res.status(201).json(row);
   } catch (err) {
     console.error("createPermission:", err);
@@ -205,15 +110,8 @@ export async function updatePermission(req, res) {
   if (id === null) {
     return res.status(400).json({ message: "Invalid id" });
   }
-  let patch;
   try {
-    patch = parseUpdatePermissionBody(req.body);
-  } catch (e) {
-    const message = e instanceof Error ? e.message : "Invalid body";
-    return res.status(400).json({ message });
-  }
-  try {
-    const row = await rbacPermissionsService.updatePermission(id, patch);
+    const row = await rbacPermissionsService.updatePermission(id, req.body);
     if (!row) {
       return res.status(404).json({ message: "Permission not found" });
     }

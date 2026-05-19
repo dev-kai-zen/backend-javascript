@@ -1,5 +1,10 @@
-import { sequelize } from "../../config/sequelize-config.js";
+import { withTransaction } from "../../shared/db/with-transaction.js";
+import { parseInput } from "../../shared/validation/parse-input.js";
 import * as refreshTokenRepository from "./refresh-token.repository.js";
+import {
+  createRefreshTokenBodySchema,
+  revokeRefreshTokenBodySchema,
+} from "./refresh-token.schemas.js";
 
 /**
  * @param {string | undefined} userIdRaw
@@ -31,51 +36,13 @@ export async function listRefreshTokens(filters) {
 
 /**
  * @param {unknown} body
- * @param {{ transaction?: import("sequelize").Transaction }} [options]
- */
-async function _createRefreshToken(body, options = {}) {
-  if (!body || typeof body !== "object" || Array.isArray(body)) {
-    throw new Error("request body is required");
-  }
-
-  const userId = Number(body.userId);
-  if (!Number.isInteger(userId) || userId < 1) {
-    throw new Error("userId must be a positive integer");
-  }
-
-  if (typeof body.token !== "string" || !body.token.trim()) {
-    throw new Error("token is required");
-  }
-  const token = body.token.trim();
-  if (token.length > 512) {
-    throw new Error("token must be at most 512 characters");
-  }
-
-  if (typeof body.expiresAt !== "string" || !body.expiresAt.trim()) {
-    throw new Error("expiresAt must be a valid ISO date string");
-  }
-  const expiresAt = new Date(body.expiresAt.trim());
-  if (Number.isNaN(expiresAt.getTime())) {
-    throw new Error("expiresAt must be a valid ISO date string");
-  }
-
-  const payload = { userId, token, expiresAt };
-
-  return refreshTokenRepository.createRefreshToken(payload, options);
-}
-
-/**
- * @param {unknown} body
- * @param {{ transaction?: import("sequelize").Transaction }} [options]
+ * @param {import("../../shared/db/with-transaction.js").DbOptions} [options]
  */
 export async function createRefreshToken(body, options = {}) {
-  if (options.transaction) {
-    return _createRefreshToken(body, options);
-  }
-
-  return sequelize.transaction(async (transaction) => {
-    return _createRefreshToken(body, { ...options, transaction });
-  });
+  return withTransaction(async (opts) => {
+    const parsed = parseInput(createRefreshTokenBodySchema, body);
+    return refreshTokenRepository.createRefreshToken(parsed, opts);
+  }, options);
 }
 
 /**
@@ -87,57 +54,22 @@ export async function getRefreshToken(id) {
 
 /**
  * @param {number} id
- * @param {{ transaction?: import("sequelize").Transaction }} [options]
- */
-async function _deleteRefreshToken(id, options = {}) {
-  return refreshTokenRepository.deleteRefreshToken(id, options);
-}
-
-/**
- * @param {number} id
- * @param {{ transaction?: import("sequelize").Transaction }} [options]
+ * @param {import("../../shared/db/with-transaction.js").DbOptions} [options]
  */
 export async function deleteRefreshToken(id, options = {}) {
-  if (options.transaction) {
-    return _deleteRefreshToken(id, options);
-  }
-
-  return sequelize.transaction(async (transaction) => {
-    return _deleteRefreshToken(id, { ...options, transaction });
-  });
-}
-
-/**
- * @param {string} token
- * @param {{ transaction?: import("sequelize").Transaction }} [options]
- */
-async function _revokeRefreshToken(body, options = {}) {
-  if (!body || typeof body !== "object" || Array.isArray(body)) {
-    throw new Error("request body is required");
-  }
-  if (typeof body.token !== "string" || !body.token.trim()) {
-    throw new Error("token is required");
-  }
-  const token = body.token.trim();
-  if (token.length > 512) {
-    throw new Error("token must be at most 512 characters");
-  }
-
-  return refreshTokenRepository.revokeRefreshToken(token, options);
+  return withTransaction(
+    (opts) => refreshTokenRepository.deleteRefreshToken(id, opts),
+    options,
+  );
 }
 
 /**
  * @param {unknown} body
- * @param {{ transaction?: import("sequelize").Transaction }} [options]
+ * @param {import("../../shared/db/with-transaction.js").DbOptions} [options]
  */
 export async function revokeRefreshToken(body, options = {}) {
-  
-
-  if (options.transaction) {
-    return _revokeRefreshToken(body, options);
-  }
-
-  return sequelize.transaction(async (transaction) => {
-    return _revokeRefreshToken(body, { ...options, transaction });
-  });
+  return withTransaction(async (opts) => {
+    const parsed = parseInput(revokeRefreshTokenBodySchema, body);
+    return refreshTokenRepository.revokeRefreshToken(parsed.token, opts);
+  }, options);
 }

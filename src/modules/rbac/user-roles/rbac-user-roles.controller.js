@@ -40,32 +40,8 @@ export async function setUserRoles(req, res) {
   if (userId === null) {
     return res.status(400).json({ message: "Invalid userId" });
   }
-  const body = req.body;
-  if (!body || !Array.isArray(body.roleIds)) {
-    return res.status(400).json({ message: "roleIds array is required" });
-  }
-  const assignedBy = Number(body.assignedBy);
-  if (!Number.isInteger(assignedBy) || assignedBy < 1) {
-    return res.status(400).json({
-      message: "assignedBy must be a positive integer",
-    });
-  }
-  const roleIds = [];
-  for (const r of body.roleIds) {
-    const n = Number(r);
-    if (!Number.isInteger(n) || n < 1) {
-      return res.status(400).json({
-        message: "each role id must be a positive integer",
-      });
-    }
-    roleIds.push(n);
-  }
   try {
-    const rows = await rbacUserRolesService.setUserRoles(
-      userId,
-      roleIds,
-      assignedBy,
-    );
+    const rows = await rbacUserRolesService.setUserRoles(userId, req.body);
     if (!rows) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -84,6 +60,9 @@ export async function setUserRoles(req, res) {
     ) {
       return res.status(409).json({ message: "Duplicate role id in request" });
     }
+    if (err instanceof Error) {
+      return res.status(400).json({ message: err.message });
+    }
     return res.status(500).json({ message: "Failed to set user roles" });
   }
 }
@@ -97,23 +76,8 @@ export async function createUserRole(req, res) {
   if (userId === null) {
     return res.status(400).json({ message: "Invalid userId" });
   }
-  const body = req.body;
-  const roleId = Number(body?.roleId);
-  const assignedBy = Number(body?.assignedBy);
-  if (!Number.isInteger(roleId) || roleId < 1) {
-    return res.status(400).json({ message: "roleId must be a positive integer" });
-  }
-  if (!Number.isInteger(assignedBy) || assignedBy < 1) {
-    return res.status(400).json({
-      message: "assignedBy must be a positive integer",
-    });
-  }
   try {
-    const row = await rbacUserRolesService.createUserRole({
-      userId,
-      roleId,
-      assignedBy,
-    });
+    const row = await rbacUserRolesService.createUserRole(userId, req.body);
     return res.status(201).json(row);
   } catch (err) {
     console.error("createUserRole:", err);
@@ -124,6 +88,9 @@ export async function createUserRole(req, res) {
       return res
         .status(409)
         .json({ message: "This role is already assigned to the user" });
+    }
+    if (err instanceof Error) {
+      return res.status(400).json({ message: err.message });
     }
     return res.status(500).json({ message: "Failed to assign role to user" });
   }

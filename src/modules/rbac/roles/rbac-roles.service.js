@@ -1,41 +1,24 @@
-import { sequelize } from "../../../config/sequelize-config.js";
+import { withTransaction } from "../../../shared/db/with-transaction.js";
+import { parseInput } from "../../../shared/validation/parse-input.js";
 import * as rbacRolesRepository from "./rbac-roles.repository.js";
+import {
+  createRoleBodySchema,
+  updateRoleBodySchema,
+} from "./rbac-roles.schemas.js";
 
 export async function listRoles() {
   return rbacRolesRepository.listRoles();
 }
 
 /**
- * @param {{ roleName: string; roleDescription: string | null }} data
- * @param {{ transaction?: import("sequelize").Transaction }} [options]
- */
-async function _createRole(data, options = {}) {
-  if (!data.roleName || data.roleName.trim() === "") {
-    throw new Error("roleName is required");
-  }
-
-  const payload = {
-    roleName: data.roleName.trim(),
-    roleDescription: data.roleDescription ?? null,
-  };
-
-  return rbacRolesRepository.createRole(payload, options);
-}
-
-/**
- * @param {{ roleName: string; roleDescription?: string | null }} data
- * @param {{ transaction?: import("sequelize").Transaction }} [options]
+ * @param {unknown} data
+ * @param {import("../../../shared/db/with-transaction.js").DbOptions} [options]
  */
 export async function createRole(data, options = {}) {
-
-
-  if (options.transaction) {
-    return _createRole(data, options);
-  }
-
-  return sequelize.transaction(async (transaction) => {
-    return _createRole(data, { ...options, transaction });
-  });
+  return withTransaction(async (opts) => {
+    const parsed = parseInput(createRoleBodySchema, data);
+    return rbacRolesRepository.createRole(parsed, opts);
+  }, options);
 }
 
 /**
@@ -47,69 +30,25 @@ export async function getRole(id) {
 
 /**
  * @param {number} id
- * @param {{ roleName?: string; roleDescription?: string | null; isActive?: boolean }} data
- * @param {{ transaction?: import("sequelize").Transaction }} [options]
- */
-async function _updateRole(id, data, options = {}) {
-  if (
-    data.roleName !== undefined &&
-    (typeof data.roleName !== "string" || data.roleName.trim() === "")
-  ) {
-    throw new Error("roleName cannot be empty");
-  }
-  /** @type {{ roleName?: string; roleDescription?: string | null; isActive?: boolean }} */
-  const patch = {};
-  if (data.roleName !== undefined) {
-    patch.roleName = data.roleName.trim();
-  }
-  if (data.roleDescription !== undefined) {
-    patch.roleDescription = data.roleDescription;
-  }
-  if (data.isActive !== undefined) {
-    patch.isActive = data.isActive;
-  }
-  if (Object.keys(patch).length === 0) {
-    throw new Error("No fields to update");
-  }
-
-  return rbacRolesRepository.updateRole(id, patch, options);
-}
-
-/**
- * @param {number} id
- * @param {{ roleName?: string; roleDescription?: string | null; isActive?: boolean }} data
- * @param {{ transaction?: import("sequelize").Transaction }} [options]
+ * @param {unknown} data
+ * @param {import("../../../shared/db/with-transaction.js").DbOptions} [options]
  */
 export async function updateRole(id, data, options = {}) {
-  if (options.transaction) {
-    return _updateRole(id, data, options);
-  }
-
-  return sequelize.transaction(async (transaction) => {
-    return _updateRole(id, data, { ...options, transaction });
-  });
+  return withTransaction(async (opts) => {
+    const parsed = parseInput(updateRoleBodySchema, data);
+    return rbacRolesRepository.updateRole(id, parsed, opts);
+  }, options);
 }
 
 /**
  * @param {number} id
- * @param {{ transaction?: import("sequelize").Transaction }} [options]
- */
-async function _deleteRole(id, options = {}) {
-  return rbacRolesRepository.deleteRole(id, options);
-}
-
-/**
- * @param {number} id
- * @param {{ transaction?: import("sequelize").Transaction }} [options]
+ * @param {import("../../../shared/db/with-transaction.js").DbOptions} [options]
  */
 export async function deleteRole(id, options = {}) {
-  if (options.transaction) {
-    return _deleteRole(id, options);
-  }
-
-  return sequelize.transaction(async (transaction) => {
-    return _deleteRole(id, { ...options, transaction });
-  });
+  return withTransaction(
+    (opts) => rbacRolesRepository.deleteRole(id, opts),
+    options,
+  );
 }
 
 /**
