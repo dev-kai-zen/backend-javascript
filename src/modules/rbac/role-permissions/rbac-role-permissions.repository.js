@@ -1,34 +1,36 @@
 import { Op } from "sequelize";
 
-import { sequelize } from "../../../config/sequelize-config.js";
 import { RbacPermission } from "../permissions/rbac-permissions.model.js";
 import { RbacRolePermission } from "./rbac-role-permissions.model.js";
 
-/** Hard-deletes existing links for the role, then inserts the new set (see model unique + paranoid). */
-export async function setRolePermissionsForRole(roleId, permissionIds) {
-  return sequelize.transaction(async (transaction) => {
-    const existing = await RbacRolePermission.findAll({
-      where: { role_id: roleId },
-      transaction,
-    });
-    if (existing.length > 0) {
-      await RbacRolePermission.destroy({
-        where: { role_id: roleId },
-        force: true,
-        transaction,
-      });
-    }
-    if (permissionIds.length === 0) {
-      return [];
-    }
-    return RbacRolePermission.bulkCreate(
-      permissionIds.map((permission_id) => ({
-        role_id: roleId,
-        permission_id,
-      })),
-      { transaction, validate: true },
-    );
+/**
+ * Hard-deletes existing links for the role, then inserts the new set (see model unique + paranoid).
+ * @param {number} roleId
+ * @param {number[]} permissionIds
+ * @param {{ transaction?: import("sequelize").Transaction }} [options]
+ */
+export async function setRolePermissionsForRole(roleId, permissionIds, options = {}) {
+  const existing = await RbacRolePermission.findAll({
+    where: { role_id: roleId },
+    ...options,
   });
+  if (existing.length > 0) {
+    await RbacRolePermission.destroy({
+      where: { role_id: roleId },
+      force: true,
+      ...options,
+    });
+  }
+  if (permissionIds.length === 0) {
+    return [];
+  }
+  return RbacRolePermission.bulkCreate(
+    permissionIds.map((permission_id) => ({
+      role_id: roleId,
+      permission_id,
+    })),
+    { ...options, validate: true },
+  );
 }
 
 /**
@@ -43,21 +45,27 @@ export async function listRolePermissions(roleId) {
 
 /**
  * @param {{ roleId: number; permissionId: number }} data
+ * @param {{ transaction?: import("sequelize").Transaction }} [options]
  */
-export async function createRolePermission(data) {
-  return RbacRolePermission.create({
-    role_id: data.roleId,
-    permission_id: data.permissionId,
-  });
+export async function createRolePermission(data, options = {}) {
+  return RbacRolePermission.create(
+    {
+      role_id: data.roleId,
+      permission_id: data.permissionId,
+    },
+    options,
+  );
 }
 
 /**
  * @param {number} roleId
  * @param {number} permissionId
+ * @param {{ transaction?: import("sequelize").Transaction }} [options]
  */
-export async function deleteRolePermission(roleId, permissionId) {
+export async function deleteRolePermission(roleId, permissionId, options = {}) {
   const deleted = await RbacRolePermission.destroy({
     where: { role_id: roleId, permission_id: permissionId },
+    ...options,
   });
   return deleted > 0;
 }

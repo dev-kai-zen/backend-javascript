@@ -41,5 +41,6 @@ export async function listAuditLogs(action, entity_type, limit, offset) {
   }
 
   return auditLogsRepository.listAuditLogs(filters, { limit: lim, offset: off });
+
 }
 

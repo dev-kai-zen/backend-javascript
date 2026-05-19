@@ -18,14 +18,18 @@ export async function listRefreshTokens(filters) {
 
 /**
  * @param {{ userId: number; token: string; expiresAt: Date }} input
+ * @param {{ transaction?: import("sequelize").Transaction }} [options]
  * @returns {Promise<import("./refresh-token.model.js").RefreshToken>}
  */
-export async function createRefreshToken(input) {
-  return RefreshToken.create({
-    user_id: input.userId,
-    token: input.token,
-    expires_at: input.expiresAt,
-  });
+export async function createRefreshToken(input, options = {}) {
+  return RefreshToken.create(
+    {
+      user_id: input.userId,
+      token: input.token,
+      expires_at: input.expiresAt,
+    },
+    options,
+  );
 }
 
 /**
@@ -38,18 +42,20 @@ export async function getRefreshToken(id) {
 
 /**
  * @param {number} id
+ * @param {{ transaction?: import("sequelize").Transaction }} [options]
  * @returns {Promise<boolean>}
  */
-export async function deleteRefreshToken(id) {
-  const deleted = await RefreshToken.destroy({ where: { id } });
+export async function deleteRefreshToken(id, options = {}) {
+  const deleted = await RefreshToken.destroy({ where: { id }, ...options });
   return deleted > 0;
 }
 
 /**
  * @param {string} token
+ * @param {{ transaction?: import("sequelize").Transaction }} [options]
  * @returns {Promise<boolean>}
  */
-export async function revokeRefreshToken(token) {
-  const deleted = await RefreshToken.destroy({ where: { token } });
+export async function revokeRefreshToken(token, options = {}) {
+  const deleted = await RefreshToken.destroy({ where: { token }, ...options });
   return deleted > 0;
 }

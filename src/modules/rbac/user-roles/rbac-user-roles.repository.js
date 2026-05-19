@@ -1,33 +1,30 @@
-import { sequelize } from "../../../config/sequelize-config.js";
-import { User } from "../../users/users.model.js";
 import { RbacRole } from "../roles/rbac-roles.model.js";
 import { RbacUserRole } from "./rbac-user-roles.model.js";
 
-/** Hard-delete existing links for the user, then insert the new set (unique + paranoid; same idea as role-permissions). */
-export async function setUserRolesForUser(userId, roleIds, assignedBy) {
-  const user = await User.findByPk(userId);
-  if (!user) {
-    return null;
-  }
-  const uniqueRoleIds = [...new Set(roleIds)];
-  return sequelize.transaction(async (transaction) => {
-    await RbacUserRole.destroy({
-      where: { user_id: userId },
-      force: true,
-      transaction,
-    });
-    if (uniqueRoleIds.length === 0) {
-      return [];
-    }
-    return RbacUserRole.bulkCreate(
-      uniqueRoleIds.map((role_id) => ({
-        user_id: userId,
-        role_id,
-        assigned_by: assignedBy,
-      })),
-      { transaction, validate: true },
-    );
+/**
+ * Hard-delete existing links for the user, then insert the new set (unique + paranoid; same idea as role-permissions).
+ * @param {number} userId
+ * @param {number[]} roleIds
+ * @param {number} assignedBy
+ * @param {{ transaction?: import("sequelize").Transaction }} [options]
+ */
+export async function setUserRolesForUser(userId, roleIds, assignedBy, options = {}) {
+  await RbacUserRole.destroy({
+    where: { user_id: userId },
+    force: true,
+    ...options,
   });
+  if (roleIds.length === 0) {
+    return [];
+  }
+  return RbacUserRole.bulkCreate(
+    roleIds.map((role_id) => ({
+      user_id: userId,
+      role_id,
+      assigned_by: assignedBy,
+    })),
+    { ...options, validate: true },
+  );
 }
 
 /**
@@ -42,22 +39,28 @@ export async function listUserRoles(userId) {
 
 /**
  * @param {{ userId: number; roleId: number; assignedBy: number }} data
+ * @param {{ transaction?: import("sequelize").Transaction }} [options]
  */
-export async function createUserRole(data) {
-  return RbacUserRole.create({
-    user_id: data.userId,
-    role_id: data.roleId,
-    assigned_by: data.assignedBy,
-  });
+export async function createUserRole(data, options = {}) {
+  return RbacUserRole.create(
+    {
+      user_id: data.userId,
+      role_id: data.roleId,
+      assigned_by: data.assignedBy,
+    },
+    options,
+  );
 }
 
 /**
  * @param {number} userId
  * @param {number} roleId
+ * @param {{ transaction?: import("sequelize").Transaction }} [options]
  */
-export async function deleteUserRole(userId, roleId) {
+export async function deleteUserRole(userId, roleId, options = {}) {
   const deleted = await RbacUserRole.destroy({
     where: { user_id: userId, role_id: roleId },
+    ...options,
   });
   return deleted > 0;
 }

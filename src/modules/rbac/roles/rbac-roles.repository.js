@@ -24,12 +24,16 @@ export async function listRoles() {
 
 /**
  * @param {{ roleName: string; roleDescription: string | null }} data
+ * @param {{ transaction?: import("sequelize").Transaction }} [options]
  */
-export async function createRole(data) {
-  return RbacRole.create({
-    role_name: data.roleName,
-    role_description: data.roleDescription,
-  });
+export async function createRole(data, options = {}) {
+  return RbacRole.create(
+    {
+      role_name: data.roleName,
+      role_description: data.roleDescription,
+    },
+    options,
+  );
 }
 
 /**
@@ -42,9 +46,10 @@ export async function getRole(id) {
 /**
  * @param {number} id
  * @param {{ roleName?: string; roleDescription?: string | null; isActive?: boolean }} data
+ * @param {{ transaction?: import("sequelize").Transaction }} [options]
  */
-export async function updateRole(id, data) {
-  const role = await RbacRole.findByPk(id);
+export async function updateRole(id, data, options = {}) {
+  const role = await RbacRole.findByPk(id, options);
   if (!role) {
     return null;
   }
@@ -59,14 +64,15 @@ export async function updateRole(id, data) {
   if (data.isActive !== undefined) {
     patch.is_active = data.isActive;
   }
-  await role.update(patch);
+  await role.update(patch, options);
   return role;
 }
 
 /**
  * @param {number} id
+ * @param {{ transaction?: import("sequelize").Transaction }} [options]
  */
-export async function deleteRole(id) {
-  const deleted = await RbacRole.destroy({ where: { id } });
+export async function deleteRole(id, options = {}) {
+  const deleted = await RbacRole.destroy({ where: { id }, ...options });
   return deleted > 0;
 }

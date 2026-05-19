@@ -1,3 +1,4 @@
+import { sequelize } from "../../config/sequelize-config.js";
 import * as userLogsRepository from "./user-logs.repository.js";
 
 const DEFAULT_LIMIT = 50;
@@ -84,7 +85,7 @@ export async function listUserLogs(
     filters.module = mod;
   }
 
-  return listUserLogsRepo(filters, { limit: lim, offset: off });
+  return userLogsRepository.listUserLogs(filters, { limit: lim, offset: off });
 }
 
 /**
@@ -96,9 +97,25 @@ function asNullableString(v) {
 }
 
 /**
- * @param {unknown} body
+ * @param {{
+ *   userId: number | null;
+ *   action: string;
+ *   module: string | null;
+ *   description: string | null;
+ *   method: string | null;
+ *   route: string | null;
+ *   statusCode: number | null;
+ *   ipAddress: string | null;
+ *   userAgent: string | null;
+ *   deviceType: string | null;
+ *   browser: string | null;
+ *   os: string | null;
+ *   sessionId: string | null;
+ *   metadata: Record<string, unknown> | null;
+ * }} payload
+ * @param {{ transaction?: import("sequelize").Transaction }} [options]
  */
-export async function createUserLog(body) {
+async function _createUserLog(body, options = {}) {
   if (!body || typeof body !== "object" || Array.isArray(body)) {
     throw new Error("request body is required");
   }
@@ -155,7 +172,7 @@ export async function createUserLog(body) {
     }
   }
 
-  return userLogsRepository.createUserLog({
+  const payload = {
     userId,
     action,
     module: moduleVal,
@@ -170,5 +187,22 @@ export async function createUserLog(body) {
     os: asNullableString(body.os),
     sessionId: asNullableString(body.sessionId),
     metadata,
+  };
+
+  return userLogsRepository.createUserLog(payload, options);
+}
+
+/**
+ * @param {unknown} body
+ * @param {{ transaction?: import("sequelize").Transaction }} [options]
+ */
+export async function createUserLog(body, options = {}) {
+
+  if (options.transaction) {
+    return _createUserLog(body, options);
+  }
+
+  return sequelize.transaction(async (transaction) => {
+    return _createUserLog(body, { ...options, transaction });
   });
 }

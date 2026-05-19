@@ -1,3 +1,4 @@
+import { sequelize } from "../../config/sequelize-config.js";
 import * as refreshTokenRepository from "./refresh-token.repository.js";
 
 /**
@@ -25,13 +26,14 @@ export function parseListFilters(userIdRaw) {
  * @param {{ userId?: number }} filters
  */
 export async function listRefreshTokens(filters) {
-  return listRefreshTokensRepo(filters);
+  return refreshTokenRepository.listRefreshTokens(filters);
 }
 
 /**
  * @param {unknown} body
+ * @param {{ transaction?: import("sequelize").Transaction }} [options]
  */
-export async function createRefreshToken(body) {
+async function _createRefreshToken(body, options = {}) {
   if (!body || typeof body !== "object" || Array.isArray(body)) {
     throw new Error("request body is required");
   }
@@ -57,10 +59,22 @@ export async function createRefreshToken(body) {
     throw new Error("expiresAt must be a valid ISO date string");
   }
 
-  return refreshTokenRepository.createRefreshToken({
-    userId,
-    token,
-    expiresAt,
+  const payload = { userId, token, expiresAt };
+
+  return refreshTokenRepository.createRefreshToken(payload, options);
+}
+
+/**
+ * @param {unknown} body
+ * @param {{ transaction?: import("sequelize").Transaction }} [options]
+ */
+export async function createRefreshToken(body, options = {}) {
+  if (options.transaction) {
+    return _createRefreshToken(body, options);
+  }
+
+  return sequelize.transaction(async (transaction) => {
+    return _createRefreshToken(body, { ...options, transaction });
   });
 }
 
@@ -73,15 +87,31 @@ export async function getRefreshToken(id) {
 
 /**
  * @param {number} id
+ * @param {{ transaction?: import("sequelize").Transaction }} [options]
  */
-export async function deleteRefreshToken(id) {
-  return refreshTokenRepository.deleteRefreshToken(id);
+async function _deleteRefreshToken(id, options = {}) {
+  return refreshTokenRepository.deleteRefreshToken(id, options);
 }
 
 /**
- * @param {unknown} body
+ * @param {number} id
+ * @param {{ transaction?: import("sequelize").Transaction }} [options]
  */
-export async function revokeRefreshToken(body) {
+export async function deleteRefreshToken(id, options = {}) {
+  if (options.transaction) {
+    return _deleteRefreshToken(id, options);
+  }
+
+  return sequelize.transaction(async (transaction) => {
+    return _deleteRefreshToken(id, { ...options, transaction });
+  });
+}
+
+/**
+ * @param {string} token
+ * @param {{ transaction?: import("sequelize").Transaction }} [options]
+ */
+async function _revokeRefreshToken(body, options = {}) {
   if (!body || typeof body !== "object" || Array.isArray(body)) {
     throw new Error("request body is required");
   }
@@ -92,5 +122,22 @@ export async function revokeRefreshToken(body) {
   if (token.length > 512) {
     throw new Error("token must be at most 512 characters");
   }
-  return refreshTokenRepository.revokeRefreshToken(token);
+
+  return refreshTokenRepository.revokeRefreshToken(token, options);
+}
+
+/**
+ * @param {unknown} body
+ * @param {{ transaction?: import("sequelize").Transaction }} [options]
+ */
+export async function revokeRefreshToken(body, options = {}) {
+  
+
+  if (options.transaction) {
+    return _revokeRefreshToken(body, options);
+  }
+
+  return sequelize.transaction(async (transaction) => {
+    return _revokeRefreshToken(body, { ...options, transaction });
+  });
 }

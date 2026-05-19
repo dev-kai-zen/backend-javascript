@@ -43,23 +43,27 @@ export async function listUserLogs(filters, options) {
  *   sessionId: string | null;
  *   metadata: Record<string, unknown> | null;
  * }} input
+ * @param {{ transaction?: import("sequelize").Transaction }} [options]
  * @returns {Promise<import("./user-logs.model.js").UserLog>}
  */
-export async function createUserLog(input) {
-  return UserLog.create({
-    user_id: input.userId,
-    action: input.action,
-    module: input.module,
-    description: input.description,
-    method: input.method,
-    route: input.route,
-    status_code: input.statusCode,
-    ip_address: input.ipAddress,
-    user_agent: input.userAgent,
-    device_type: input.deviceType,
-    browser: input.browser,
-    os: input.os,
-    session_id: input.sessionId,
-    metadata: input.metadata,
-  });
+export async function createUserLog(input, options = {}) {
+  return UserLog.create(
+    {
+      user_id: input.userId,
+      action: input.action,
+      module: input.module,
+      description: input.description,
+      method: input.method,
+      route: input.route,
+      status_code: input.statusCode,
+      ip_address: input.ipAddress,
+      user_agent: input.userAgent,
+      device_type: input.deviceType,
+      browser: input.browser,
+      os: input.os,
+      session_id: input.sessionId,
+      metadata: input.metadata,
+    },
+    options,
+  );
 }

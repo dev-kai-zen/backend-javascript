@@ -5,10 +5,11 @@ const MAX_LIMIT = 200;
 
 /**
  * @param {object} data
+ * @param {{ transaction?: import("sequelize").Transaction }} [options]
  * @returns {Promise<import("./users.model.js").User>}
  */
-export async function createUser(data) {
-  return User.create(data);
+export async function createUser(data, options = {}) {
+  return User.create(data, options);
 }
 
 /**
@@ -42,27 +43,29 @@ export async function getUsers(query = {}) {
 /**
  * @param {number} id
  * @param {object} data
+ * @param {{ transaction?: import("sequelize").Transaction }} [options]
  * @returns {Promise<import("./users.model.js").User | null>}
  */
-export async function updateUser(id, data) {
-  const user = await User.findByPk(id);
+export async function updateUser(id, data, options = {}) {
+  const user = await User.findByPk(id, options);
   if (!user) {
     return null;
   }
-  await user.update(data);
-  return user.reload();
+  await user.update(data, options);
+  return user.reload(options);
 }
 
 /**
  * Soft-delete (paranoid).
  * @param {number} id
+ * @param {{ transaction?: import("sequelize").Transaction }} [options]
  * @returns {Promise<boolean>}
  */
-export async function deleteUser(id) {
-  const user = await User.findByPk(id);
+export async function deleteUser(id, options = {}) {
+  const user = await User.findByPk(id, options);
   if (!user) {
     return false;
   }
-  await user.destroy();
+  await user.destroy(options);
   return true;
 }

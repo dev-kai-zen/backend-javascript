@@ -1,17 +1,14 @@
-import {
-  createUser as createUserRepo,
-  deleteUser as deleteUserRepo,
-  getUserById as getUserByIdRepo,
-  getUsers as getUsersRepo,
-  updateUser as updateUserRepo,
-} from "./users.repository.js";
+import * as usersRepository from "./users.repository.js";
+import { sequelize } from "../../config/sequelize-config.js";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+
 /**
  * @param {{ email?: unknown; full_name?: unknown; google_id?: unknown; picture_url?: unknown; is_active?: unknown; last_login_at?: unknown }} body
+ * @param {{ transaction?: import("sequelize").Transaction }} [options]
  */
-export async function createUser(body) {
+async function _createUser(body, options = {}) {
   if (!body || typeof body.email !== "string" || !body.email.trim()) {
     throw new Error("email is required");
   }
@@ -47,7 +44,21 @@ export async function createUser(body) {
     last_login_at,
   };
 
-  return createUserRepo(row);
+  return usersRepository.createUser(row, options);
+}
+
+/**
+ * @param {{ email?: unknown; full_name?: unknown; google_id?: unknown; picture_url?: unknown; is_active?: unknown; last_login_at?: unknown }} body
+ * @param {{ transaction?: import("sequelize").Transaction }} [options]
+ */
+export async function createUser(body, options = {}) {
+  if (options.transaction) {
+    return _createUser(body, options);
+  }
+
+  return sequelize.transaction(async (transaction) => {
+    return _createUser(body, { ...options, transaction });
+  });
 }
 
 /**
@@ -55,21 +66,23 @@ export async function createUser(body) {
  * @param {string | undefined} offset
  */
 export async function getUsers(limit, offset) {
-  return getUsersRepo({ limit, offset });
+  return usersRepository.getUsers({ limit, offset });
 }
 
 /**
  * @param {number} id
  */
 export async function getUserById(id) {
-  return getUserByIdRepo(id);
+  return usersRepository.getUserById(id);
 }
+
 
 /**
  * @param {number} id
  * @param {{ full_name?: unknown; google_id?: unknown; picture_url?: unknown; is_active?: unknown; last_login_at?: unknown; email?: unknown }} body
+ * @param {{ transaction?: import("sequelize").Transaction }} [options]
  */
-export async function updateUser(id, body) {
+async function _updateUser(id, body, options = {}) {
   if (!body || typeof body !== "object") {
     throw new Error("request body is required");
   }
@@ -137,13 +150,43 @@ export async function updateUser(id, body) {
   if (Object.keys(patch).length === 0) {
     throw new Error("no fields to update");
   }
-
-  return updateUserRepo(id, patch);
+  return usersRepository.updateUser(id, patch, options);
 }
 
 /**
  * @param {number} id
+ * @param {{ full_name?: unknown; google_id?: unknown; picture_url?: unknown; is_active?: unknown; last_login_at?: unknown; email?: unknown }} body
+ * @param {{ transaction?: import("sequelize").Transaction }} [options]
  */
-export async function deleteUser(id) {
-  return deleteUserRepo(id);
+export async function updateUser(id, body, options = {}) {
+  if (options.transaction) {
+    return _updateUser(id, body, options);
+  }
+
+  return sequelize.transaction(async (transaction) => {
+    return _updateUser(id, body, { ...options, transaction });
+  });
+}
+
+
+/**
+ * @param {number} id
+ * @param {{ transaction?: import("sequelize").Transaction }} [options]
+ */
+async function _deleteUser(id, options = {}) {
+  return usersRepository.deleteUser(id, options);
+}
+
+/**
+ * @param {number} id
+ * @param {{ transaction?: import("sequelize").Transaction }} [options]
+ */
+export async function deleteUser(id, options = {}) {
+  if (options.transaction) {
+    return _deleteUser(id, options);
+  }
+
+  return sequelize.transaction(async (transaction) => {
+    return _deleteUser(id, { ...options, transaction });
+  });
 }

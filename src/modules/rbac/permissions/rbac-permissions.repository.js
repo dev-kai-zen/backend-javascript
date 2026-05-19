@@ -32,13 +32,17 @@ export async function listPermissions(filters) {
 
 /**
  * @param {{ permissionCode: string; permissionDescription: string | null; categoryId: number | null }} data
+ * @param {{ transaction?: import("sequelize").Transaction }} [options]
  */
-export async function createPermission(data) {
-  return RbacPermission.create({
-    permission_code: data.permissionCode,
-    permission_description: data.permissionDescription,
-    category_id: data.categoryId,
-  });
+export async function createPermission(data, options = {}) {
+  return RbacPermission.create(
+    {
+      permission_code: data.permissionCode,
+      permission_description: data.permissionDescription,
+      category_id: data.categoryId,
+    },
+    options,
+  );
 }
 
 /**
@@ -51,9 +55,10 @@ export async function getPermission(id) {
 /**
  * @param {number} id
  * @param {{ permissionCode?: string; permissionDescription?: string | null; categoryId?: number | null; isActive?: boolean }} data
+ * @param {{ transaction?: import("sequelize").Transaction }} [options]
  */
-export async function updatePermission(id, data) {
-  const row = await RbacPermission.findByPk(id);
+export async function updatePermission(id, data, options = {}) {
+  const row = await RbacPermission.findByPk(id, options);
   if (!row) {
     return null;
   }
@@ -71,14 +76,15 @@ export async function updatePermission(id, data) {
   if (data.isActive !== undefined) {
     patch.is_active = data.isActive;
   }
-  await row.update(patch);
+  await row.update(patch, options);
   return row;
 }
 
 /**
  * @param {number} id
+ * @param {{ transaction?: import("sequelize").Transaction }} [options]
  */
-export async function deletePermission(id) {
-  const deleted = await RbacPermission.destroy({ where: { id } });
+export async function deletePermission(id, options = {}) {
+  const deleted = await RbacPermission.destroy({ where: { id }, ...options });
   return deleted > 0;
 }
