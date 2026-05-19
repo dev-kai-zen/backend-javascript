@@ -1,4 +1,6 @@
-import { createUserBodySchema } from "../../../modules/users/users.schemas.js";
+import { describe, expect, it } from "vitest";
+
+import { createUserBodySchema } from "./users.schemas.js";
 
 describe("users.schemas", () => {
   it("createUserBodySchema normalizes email to lowercase", () => {

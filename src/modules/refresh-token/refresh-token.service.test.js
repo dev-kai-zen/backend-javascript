@@ -1,8 +1,7 @@
-import { parseListFilters } from "../../../modules/refresh-token/refresh-token.service.js";
+import { describe, expect, it } from "vitest";
 
-/**
- * parseListFilters is pure logic (no DB) — easy first service test.
- */
+import { parseListFilters } from "./refresh-token.service.js";
+
 describe("refresh-token.service parseListFilters", () => {
   it("returns empty filters when userId is omitted", () => {
     expect(parseListFilters(undefined)).toEqual({});

@@ -1,31 +1,30 @@
-import { jest } from "@jest/globals";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { createMockResponse } from "../../helpers/mock-response.js";
+import { createMockResponse } from "../../test/mock-response.js";
 
-const getUserById = jest.fn();
-const getUsers = jest.fn();
-const createUser = jest.fn();
-const updateUser = jest.fn();
-const deleteUser = jest.fn();
-
-await jest.unstable_mockModule(
-  "../../../modules/users/users.service.js",
+const { getUserById, getUsers, createUser, updateUser, deleteUser } = vi.hoisted(
   () => ({
-    createUser,
-    getUsers,
-    getUserById,
-    updateUser,
-    deleteUser,
+    getUserById: vi.fn(),
+    getUsers: vi.fn(),
+    createUser: vi.fn(),
+    updateUser: vi.fn(),
+    deleteUser: vi.fn(),
   }),
 );
 
-const { getUserById: getUserByIdHandler } = await import(
-  "../../../modules/users/users.controller.js"
-);
+vi.mock("./users.service.js", () => ({
+  createUser,
+  getUsers,
+  getUserById,
+  updateUser,
+  deleteUser,
+}));
+
+const { getUserById: getUserByIdHandler } = await import("./users.controller.js");
 
 describe("users.controller", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it("getUserById returns 400 when id is invalid", async () => {

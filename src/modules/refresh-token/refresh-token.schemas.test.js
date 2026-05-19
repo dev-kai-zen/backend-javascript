@@ -1,4 +1,6 @@
-import { createRefreshTokenBodySchema } from "../../../modules/refresh-token/refresh-token.schemas.js";
+import { describe, expect, it } from "vitest";
+
+import { createRefreshTokenBodySchema } from "./refresh-token.schemas.js";
 
 describe("refresh-token.schemas", () => {
   it("accepts valid create body and parses expiresAt to Date", () => {

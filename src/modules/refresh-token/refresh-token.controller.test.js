@@ -1,33 +1,39 @@
-import { jest } from "@jest/globals";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { createMockResponse } from "../../helpers/mock-response.js";
+import { createMockResponse } from "../../test/mock-response.js";
 
-const parseListFilters = jest.fn();
-const listRefreshTokens = jest.fn();
-const createRefreshToken = jest.fn();
-const getRefreshToken = jest.fn();
-const deleteRefreshToken = jest.fn();
-const revokeRefreshToken = jest.fn();
+const {
+  parseListFilters,
+  listRefreshTokens,
+  createRefreshToken,
+  getRefreshToken,
+  deleteRefreshToken,
+  revokeRefreshToken,
+} = vi.hoisted(() => ({
+  parseListFilters: vi.fn(),
+  listRefreshTokens: vi.fn(),
+  createRefreshToken: vi.fn(),
+  getRefreshToken: vi.fn(),
+  deleteRefreshToken: vi.fn(),
+  revokeRefreshToken: vi.fn(),
+}));
 
-await jest.unstable_mockModule(
-  "../../../modules/refresh-token/refresh-token.service.js",
-  () => ({
-    parseListFilters,
-    listRefreshTokens,
-    createRefreshToken,
-    getRefreshToken,
-    deleteRefreshToken,
-    revokeRefreshToken,
-  }),
-);
+vi.mock("./refresh-token.service.js", () => ({
+  parseListFilters,
+  listRefreshTokens,
+  createRefreshToken,
+  getRefreshToken,
+  deleteRefreshToken,
+  revokeRefreshToken,
+}));
 
 const { getRefreshToken: getRefreshTokenHandler } = await import(
-  "../../../modules/refresh-token/refresh-token.controller.js"
+  "./refresh-token.controller.js"
 );
 
 describe("refresh-token.controller", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it("getRefreshToken returns 400 when id is invalid", async () => {

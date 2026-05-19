@@ -1,5 +1,5 @@
-import { createApp } from "../../app.js";
-import { buildV1ModulesRouter } from "../../bootstrap/register-module-routes.js";
+import { createApp } from "../app.js";
+import { buildV1ModulesRouter } from "../bootstrap/register-module-routes.js";
 
 /**
  * Express app for integration tests (all discovered `/api/v1` routes, no listen).

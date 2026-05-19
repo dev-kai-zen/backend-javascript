@@ -11,7 +11,7 @@ const scanDirs = [
   path.join(rootDir, "src", "shared"),
 ];
 
-const testBaseDir = path.join(rootDir, "src", "tests", "generated");
+const testHelpersDir = path.join(rootDir, "src", "test");
 
 const SKIP_FILES = new Set([
   "models.register.js",
@@ -59,6 +59,7 @@ function getAllJsFiles(dirPath, filesArray = []) {
       fullPath.endsWith(".js") &&
       !fullPath.endsWith(".test.js") &&
       !fullPath.endsWith(".spec.js") &&
+      !fullPath.endsWith(".integration.test.js") &&
       !shouldSkipFile(file)
     ) {
       filesArray.push(fullPath);
@@ -69,30 +70,17 @@ function getAllJsFiles(dirPath, filesArray = []) {
 }
 
 function getTestFilePath(sourceFilePath) {
-  const relativePath = path.relative(path.join(rootDir, "src"), sourceFilePath);
-  const testFileName = relativePath.replace(/\.js$/, ".test.js");
-
   const adjacentTest = sourceFilePath.replace(/\.js$/, ".test.js");
   if (fs.existsSync(adjacentTest)) {
     return adjacentTest;
   }
 
-  const standardTestPath = path.join(rootDir, "src", "tests", testFileName);
-  if (fs.existsSync(standardTestPath)) {
-    return standardTestPath;
-  }
-
-  const integrationPath = standardTestPath.replace(
-    /\.test\.js$/,
+  const integrationPath = sourceFilePath.replace(
+    /\.js$/,
     ".integration.test.js",
   );
   if (fs.existsSync(integrationPath)) {
     return integrationPath;
-  }
-
-  const generatedTestPath = path.join(testBaseDir, testFileName);
-  if (fs.existsSync(generatedTestPath)) {
-    return generatedTestPath;
   }
 
   return null;
@@ -133,11 +121,7 @@ function detectTestCases(filePath) {
 }
 
 function generateTestFile(sourceFilePath, suggestedCases) {
-  const relativePath = path.relative(path.join(rootDir, "src"), sourceFilePath);
-  const testFilePath = path.join(
-    testBaseDir,
-    relativePath.replace(/\.js$/, ".test.js"),
-  );
+  const testFilePath = sourceFilePath.replace(/\.js$/, ".test.js");
   const testDir = path.dirname(testFilePath);
 
   if (!fs.existsSync(testDir)) {
@@ -148,7 +132,7 @@ function generateTestFile(sourceFilePath, suggestedCases) {
   const isRoutes = fileName.endsWith(".routes.js");
 
   const helperImportPath = path
-    .relative(testDir, path.join(rootDir, "src", "tests", "helpers", "create-test-app.js"))
+    .relative(testDir, path.join(testHelpersDir, "create-test-app.js"))
     .replace(/\\/g, "/");
 
   let content = "";
@@ -198,7 +182,7 @@ ${suggestedCases
 });
 `;
   } else {
-    content = `import { jest } from "@jest/globals";
+    content = `import { describe, it } from "vitest";
 
 describe("${fileName}", () => {
 ${suggestedCases
@@ -261,7 +245,7 @@ function runScanner() {
     });
 
     console.log(
-      `\nRun ${colors.yellow}npm run test:gen${colors.reset} to scaffold missing tests in src/tests/generated/.`,
+      `\nRun ${colors.yellow}npm run test:gen${colors.reset} to scaffold missing tests next to source files.`,
     );
   } else {
     console.log(`${colors.bold}${colors.yellow}Generating tests...${colors.reset}\n`);
@@ -277,13 +261,15 @@ function runScanner() {
         );
         if (result.status === "created") {
           createdCount++;
+        } else if (result.status === "updated") {
+          updatedCount++;
         }
       }
     }
 
     for (const f of testedFiles) {
       const cases = detectTestCases(f.source);
-      if (cases.length > 0 && f.test.includes("generated")) {
+      if (cases.length > 0) {
         const result = generateTestFile(f.source, cases);
         if (result.status === "updated") {
           console.log(

@@ -1,6 +1,7 @@
+import { describe, expect, it } from "vitest";
 import { z } from "zod";
 
-import { parseInput } from "../../../shared/validation/parse-input.js";
+import { parseInput } from "./parse-input.js";
 
 describe("parseInput", () => {
   const schema = z.object({

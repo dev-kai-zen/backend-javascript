@@ -1,9 +1,11 @@
+import { describe, expect, it } from "vitest";
+
 import {
   sendError,
   sendSuccess,
   sendValidationError,
-} from "../../../shared/http/api-response.js";
-import { createMockResponse } from "../../helpers/mock-response.js";
+} from "./api-response.js";
+import { createMockResponse } from "../../test/mock-response.js";
 
 describe("api-response", () => {
   it("sendSuccess returns status true with default message", () => {

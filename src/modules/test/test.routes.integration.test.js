@@ -1,6 +1,7 @@
+import { beforeAll, describe, expect, it } from "vitest";
 import request from "supertest";
 
-import { createTestApp } from "../../helpers/create-test-app.js";
+import { createTestApp } from "../../test/create-test-app.js";
 
 describe("test.routes integration", () => {
   let app;

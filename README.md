@@ -74,29 +74,32 @@ The bootstrap discovers every module that has `models.register.js` and `routes.r
 
 ## Testing
 
-Tests use **Jest** and **Supertest** (ES modules). A `jest.setup.js` file sets minimal env vars so unit tests do not require a running database.
+Tests use **Vitest** and **Supertest** (ES modules). `vitest.setup.js` at the repo root sets minimal env vars so unit tests do not require a running database.
 
 | Command | Purpose |
 |---------|---------|
-| `npm test` | Run all tests under `src/tests/` |
+| `npm test` | Run all `*.test.js` and `*.integration.test.js` under `src/` |
 | `npm run test:watch` | Run tests in watch mode |
-| `npm run test:scan` | List source files with / without tests |
-| `npm run test:gen` | Scaffold missing tests in `src/tests/generated/` |
+| `npm run test:scan` | List source files with / without co-located tests |
+| `npm run test:gen` | Scaffold missing `*.test.js` files next to source |
 
 **Layout**
 
-- `src/tests/` — hand-written unit and integration tests (preferred)
-- `src/tests/helpers/create-test-app.js` — builds Express app with all `/api/v1` routes for HTTP tests
-- `src/tests/generated/` — optional stubs from `test:gen` (safe to fill in over time)
+- Co-located tests live **next to** the file they test (e.g. `users.service.js` → `users.service.test.js`)
+- Route-level HTTP tests use `*.integration.test.js` (e.g. `test.routes.integration.test.js`)
+- `src/test/create-test-app.js` — Express app with all `/api/v1` routes for integration tests
+- `src/test/mock-response.js` — minimal `res` mock for controller unit tests
 
 **Examples included:** `api-response`, `parse-input`, `users.schemas`, `users.controller` (mocked service), `test.routes` integration (`/api/v1/test`, `/health`).
+
+See [`docs/how-to-create-test-file.md`](docs/how-to-create-test-file.md) for a step-by-step guide.
 
 ## Useful scripts
 
 | Command | Purpose |
 |---------|---------|
 | `npm run dev` | Start with nodemon |
-| `npm test` | Run Jest test suite |
+| `npm test` | Run Vitest test suite |
 | `npm run migration:create -- <name>` | New migration (`.cjs` in `database/migrations/`) |
 | `npm run migration:up` / `migration:down` | Apply / undo last migration |
 | `npm run seed:all` | Run seeders |
