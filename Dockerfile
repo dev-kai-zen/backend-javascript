@@ -1,23 +1,34 @@
-# --- run ---
-FROM node:22-bookworm-slim
+# Use lightweight Node.js 22 LTS base (Alpine for smaller size)
+FROM node:22-alpine
 
-WORKDIR /app
+# Set working directory
+WORKDIR /usr/src/app
 
-COPY package.json package-lock.json ./
-# Install Sequelize CLI after prod deps (`sequelize-cli` is a devDependency in package.json).
-# Do not set NODE_ENV=production yet — it can suppress installing that extra package reliably.
-RUN npm ci --omit=dev && npm install sequelize-cli --no-save
+# Create a non-root user for security
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001
 
-ENV NODE_ENV=production
+# Copy package files first (for better layer caching)
+COPY package*.json ./
 
-COPY src ./src
-COPY database ./database
-COPY .sequelizerc ./
+# Install production dependencies only
+RUN npm ci --omit=dev --legacy-peer-deps --ignore-scripts && \
+    npm cache clean --force
 
-COPY docker/entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+# Copy application source code
+COPY --chown=nodejs:nodejs . .
 
-EXPOSE 3000
-ENTRYPOINT ["/entrypoint.sh"]
-# Default subcommand for `docker compose up` (see docker/entrypoint.sh).
+RUN chmod +x docker/entrypoint.sh
+
+# Switch to non-root user
+USER nodejs
+
+# Expose the app port (Cloud Run expects 8080)
+EXPOSE 8080
+
+# Set environment variable for port (Cloud Run sets PORT env var)
+ENV PORT=8080
+ENV HOST=0.0.0.0
+
+ENTRYPOINT ["docker/entrypoint.sh"]
 CMD ["run"]
