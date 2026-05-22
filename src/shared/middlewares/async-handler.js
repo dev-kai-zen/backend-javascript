@@ -1,4 +1,4 @@
-import { sendError } from "../http/api-response.js";
+import { sendError, sendValidationError } from "../http/api-response.js";
 
 /**
  * Wraps an async Express handler so failures become API error responses.
@@ -31,6 +31,14 @@ export function asyncHandler(handler, options = {}) {
       if (err?.statusCode != null) {
         const message =
           err instanceof Error ? err.message : String(err?.message ?? defaultMessage);
+
+        if (err.statusCode === 400) {
+          return sendValidationError(res, {
+            message,
+            data: err.data ?? null,
+          });
+        }
+
         return sendError(res, {
           message,
           statusCode: err.statusCode,

@@ -106,6 +106,12 @@ See [`docs/how-to-create-test-file.md`](docs/how-to-create-test-file.md) for a s
 
 More detail: [`docs/db-migrations.md`](docs/db-migrations.md), [`docs/deployment-guide.md`](docs/deployment-guide.md).
 
+## Contributing
+
+Team workflow, PR checklist, and definition of done: [`docs/contributing-guide.md`](docs/contributing-guide.md).
+
+CI runs `npm test` on every push and pull request to `main` (GitHub Actions).
+
 ## Architecture
 
 Follow the conventions in your Cursor rules (`backend-javascript-architecture.mdc`): one name per layer, services call other modules’ **services** (not their repositories), transactions via `options.transaction` / `withTransaction`, validation in services with Zod.

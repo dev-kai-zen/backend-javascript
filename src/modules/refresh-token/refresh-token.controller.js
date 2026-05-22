@@ -1,4 +1,3 @@
-import { UniqueConstraintError } from "sequelize";
 
 import {
   sendError,

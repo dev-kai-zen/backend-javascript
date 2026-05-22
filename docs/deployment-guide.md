@@ -1,11 +1,11 @@
 # Deployment Guide (Docker) — For Junior Developers
 
-This guide explains how to run the **backend-typescript** API and **MySQL** with Docker Compose using a **production-style workflow**: **database migrations are a separate, explicit step** from starting the API container. That matches how many teams deploy: migrate once (or via a job), then roll out new app containers.
+This guide explains how to run the **backend-javascript** API and **MySQL** with Docker Compose using a **production-style workflow**: **database migrations are a separate, explicit step** from starting the API container. That matches how many teams deploy: migrate once (or via a job), then roll out new app containers.
 
 **What you already have in this repo**
 
 - `docker-compose.yml` — defines the **`db`** (MySQL) and **`api`** services.
-- `Dockerfile` — builds a production-style image (compile TypeScript, run `node dist/index.js`).
+- `Dockerfile` — builds a production-style image (install dependencies, run `node src/index.js`).
 - `docker/entrypoint.sh` — starts the API; runs migrations **only** if you set `RUN_MIGRATIONS_ON_START=true` **or** if you invoke the **`migrate`** command (see below).
 
 **Why this matters:** if every API replica ran migrations on boot in production, several instances could try to change the schema at the same time and cause confusing failures or locks. Teams usually **run migrations deliberately** (CI, release script, or one-off container) **before** or **as part of** a controlled deploy.
@@ -71,7 +71,7 @@ MySQL is running with an empty database **name** created by Compose, your **sche
 ### Preconditions
 
 - **Docker** and **Docker Compose** installed (on WSL/Linux: Docker Engine or Docker Desktop with WSL integration, depending on your setup).
-- Terminal open at the **backend-typescript** repo root (where `docker-compose.yml` lives).
+- Terminal open at the **backend-javascript** repo root (where `docker-compose.yml` lives).
 
 ### Steps (production-style — explicit migrate)
 
@@ -81,7 +81,7 @@ MySQL is running with an empty database **name** created by Compose, your **sche
 docker compose up -d db
 ```
 
-**What this does:** downloads the MySQL image if needed, starts **`backend-ts-mysql`**, creates the **`mysql_data`** volume, exposes **host port `3307` → container `3306`**.
+**What this does:** downloads the MySQL image if needed, starts **`backend-js-mysql`**, creates the **`mysql_data`** volume, exposes **host port `3308` → container `3306`**.
 
 **Why `-d`:** runs in the **background** (“detached”) so your terminal stays free.
 
@@ -91,7 +91,7 @@ docker compose up -d db
 docker compose ps
 ```
 
-Wait until **`backend-ts-mysql`** shows **(healthy)** in the `STATUS` column (Compose runs a healthcheck). The API service is configured to wait for that health before starting, but **manual migrate** still needs a live DB.
+Wait until **`backend-js-mysql`** shows **(healthy)** in the `STATUS` column (Compose runs a healthcheck). The API service is configured to wait for that health before starting, but **manual migrate** still needs a live DB.
 
 **Step 3 — Build the API image (first time or after code changes)**
 
@@ -99,7 +99,7 @@ Wait until **`backend-ts-mysql`** shows **(healthy)** in the `STATUS` column (Co
 docker compose build api
 ```
 
-**What this does:** runs the **`Dockerfile`**: `npm ci`, `npm run build` (`tsc`), prepares the runtime image with `dist/`, `database/`, and `sequelize-cli`.
+**What this does:** runs the **`Dockerfile`**: `npm ci --omit=dev`, copies `src/`, `database/`, and `sequelize-cli` into the image.
 
 **Step 4 — Run migrations **once** against that database**
 
@@ -122,7 +122,7 @@ docker compose run --rm api migrate
 docker compose up -d api
 ```
 
-**What this does:** starts **`backend-ts-api`** on **port `3000`** (or **`API_PORT`** if you set it in a `.env` file next to `docker-compose.yml`).
+**What this does:** starts **`backend-js-api`** on **port `3000`** (or **`API_PORT`** if you set it in a `.env` file next to `docker-compose.yml`).
 
 **Step 6 — Quick sanity check**
 
@@ -152,7 +152,7 @@ docker compose up -d
 
 ### Scenario
 
-You edited TypeScript under `src/` and want the **running container** to use the new code.
+You edited JavaScript under `src/` and want the **running container** to use the new code.
 
 ### Commands
 
@@ -163,7 +163,7 @@ docker compose up -d api
 
 **What each step does**
 
-1. **`build api`** — new **image** layer with fresh `dist/` from `tsc`.
+1. **`build api`** — new **image** layer with your latest `src/` files.
 2. **`up -d api`** — recreates the **api** container from that image (Compose does this when the image id changed).
 
 **If you did not change migrations:** you **do not** need to run `migrate` again.
@@ -194,7 +194,7 @@ docker compose run --rm api migrate
 npm run migration:up
 ```
 
-Both use **`DATABASE_URL`** and **`database/config/database.js`** (Sequelize CLI). **Inside Docker**, Compose sets **`DATABASE_URL`** to reach the **`db`** service; on your laptop, your `.env` might use **`localhost:3307`** instead — **do not mix them up** (one wrong URL migrates a different database).
+Both use **`DATABASE_URL`** and **`database/config/database.cjs`** (Sequelize CLI). **Inside Docker**, Compose sets **`DATABASE_URL`** to reach the **`db`** service; on your laptop, your `.env` might use **`localhost:3308`** instead — **do not mix them up** (one wrong URL migrates a different database).
 
 ### Check migration status (host with Node)
 
@@ -253,10 +253,10 @@ Compose reads variables from a **`.env`** file in the **same directory** as `doc
 
 | Service | Host port | Inside Compose network |
 |---------|-----------|-------------------------|
-| MySQL | **`3307`** → container `3306` | host name **`db`**, port **`3306`** |
+| MySQL | **`3308`** → container `3306` | host name **`db`**, port **`3306`** |
 | API | **`3000`** (or **`API_PORT`**) | **`http://api:3000`** from another container |
 
-**Example:** connect from your laptop with a GUI or CLI using **`127.0.0.1`**, port **`3307`**, user **`boilerplate`** (see `docker-compose.yml`).
+**Example:** connect from your laptop with a GUI or CLI using **`127.0.0.1`**, port **`3308`**, user **`boilerplate_js`** (see `docker-compose.yml`).
 
 ---
 
@@ -300,7 +300,7 @@ environment:
 ### `Error: connect ECONNREFUSED` or migration cannot reach DB
 
 - Is **`db`** running and **healthy**? `docker compose ps`
-- Did you use **`db`** as hostname **inside** containers and **`127.0.0.1:3307`** only **from your host**?
+- Did you use **`db`** as hostname **inside** containers and **`127.0.0.1:3308`** only **from your host**?
 
 ### API exits immediately
 
