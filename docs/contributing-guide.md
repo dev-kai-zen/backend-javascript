@@ -37,6 +37,7 @@ Add or update a folder under `src/modules/<your-module>/` with these layers:
 | `*.schemas.js` | Zod schemas (no HTTP here) |
 | `*.controller.js` | HTTP only; wrap handlers with `asyncHandler` |
 | `*.routes.js` | Express routes |
+| `*.permissions.js` | Permission **codes** for `routesGuard` (strings must match DB seed + JWT) |
 | `models.register.js` | `registerModels()` (+ `modelLoadDependencies` if needed) |
 | `routes.register.js` | `registerV1Routes(v1Router)` |
 
@@ -51,11 +52,39 @@ Add or update a folder under `src/modules/<your-module>/` with these layers:
 ## Auth and RBAC
 
 - Do **not** add global JWT on `/api/v1` unless the whole tree must be private.
-- Put **`authenticateJwt`** on routes (or mount it in `routes.register.js` for that module).
-- Put **`routesGuard`** with `roles` and/or `permissions` on routes that need RBAC.
-- Permission codes live in `src/shared/constants/permissions.contant.js` (and DB seed catalog).
+- Put **`authenticateJwt`** on the module in `routes.register.js` (e.g. `v1Router.use("/users", authenticateJwt, usersRoutes)`).
+- Put **`routesGuard`** on individual routes in `*.routes.js` that need authorization.
 
 JWT alone does **not** enforce permissions — you must add `routesGuard` explicitly.
+
+### Where permission codes live
+
+Use a **module-local** `*.permissions.js` file — not a single global file for every module:
+
+| Module | File | Example export |
+|--------|------|----------------|
+| Users | `users/users.permissions.js` | `USERS.READ` → `"users:read"` |
+| User logs | `user-logs/user-logs.permissions.js` | `USER_LOGS_PERMISSIONS` |
+| Audit logs | `audit-logs/audit-logs.permissions.js` | `AUDIT_LOGS_PERMISSIONS` |
+| RBAC tree | `rbac/rbac.permissions.js` | `RBAC_ROLES`, `RBAC_PERMISSIONS`, … |
+
+In `*.routes.js`, import from that file and pass codes to `routesGuard`:
+
+```js
+import { USERS } from "./users.permissions.js";
+import routesGuard from "../../shared/middlewares/routes-guard.js";
+
+usersRoutes.get("/", routesGuard({ permissions: [USERS.READ], source: "token" }), ...);
+```
+
+**Roles** (role names, not permission codes) stay in `src/shared/constants/roles.constant.js`.
+
+**Database seed:** when you add a new permission code, add the **same string** to `database/seed-data/rbac-permission-seed-catalog.js` so JWT claims and `routesGuard` agree. If the route checks `users:read` but the DB only has `user_management:read`, every guarded request returns **403**.
+
+### Rate limiting
+
+- **Global:** `apiRateLimiter` on all `/api/v1` traffic is applied once in `src/config/middleware-config.js`. You usually **do not** mount `apiRateLimiter` again in `routes.register.js` for the same paths (that would run two limiters per request).
+- **Stricter auth routes:** use `authRateLimiter` on login/logout (see `google-auth.routes.js`). That stacks with the global limiter by design.
 
 ---
 
