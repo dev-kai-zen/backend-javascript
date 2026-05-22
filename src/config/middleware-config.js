@@ -8,7 +8,7 @@ import { apiRateLimiter } from "../shared/middlewares/rate-limiter.js";
 
 /**
  * Register global middleware here in order (top runs first).
- * When you add a new middleware library, wire it here so `app.ts` stays short.
+ * When you add a new middleware library, wire it here so `app.js` stays short.
  */
 export function applyMiddlewares(app) {
   app.use(
