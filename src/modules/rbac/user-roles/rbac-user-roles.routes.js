@@ -2,7 +2,7 @@ import { Router } from "express";
 
 import * as rbacUserRolesController from "./rbac-user-roles.controller.js";
 import { RBAC_USER_ROLES } from "../rbac.permissions.js";
-import  routesGuard  from "../../../shared/middlewares/routes-guard.js";
+import routesGuard from "../../../shared/middlewares/routes-guard.js";
 
 export const rbacUserRolesRoutes = Router();
 
@@ -26,4 +26,3 @@ rbacUserRolesRoutes.delete(
   routesGuard({ permissions: [RBAC_USER_ROLES.DELETE], source: "db" }),
   rbacUserRolesController.deleteUserRole,
 );
-

@@ -2,7 +2,7 @@ import { Router } from "express";
 
 import * as rbacPermissionsController from "./rbac-permissions.controller.js";
 import { RBAC_PERMISSIONS } from "../rbac.permissions.js";
-import  routesGuard  from "../../../shared/middlewares/routes-guard.js";
+import routesGuard from "../../../shared/middlewares/routes-guard.js";
 
 export const rbacPermissionsRoutes = Router();
 

@@ -2,7 +2,7 @@ import { Router } from "express";
 
 import * as rbacCategoriesController from "./rbac-categories.controller.js";
 import { RBAC_CATEGORIES } from "../rbac.permissions.js";
-import  routesGuard  from "../../../shared/middlewares/routes-guard.js";
+import routesGuard from "../../../shared/middlewares/routes-guard.js";
 
 export const rbacCategoriesRoutes = Router();
 

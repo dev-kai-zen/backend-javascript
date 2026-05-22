@@ -2,7 +2,7 @@ import { Router } from "express";
 
 import * as usersController from "./users.controller.js";
 import { USERS } from "./users.permissions.js";
-import  routesGuard  from "../../shared/middlewares/routes-guard.js";
+import routesGuard from "../../shared/middlewares/routes-guard.js";
 /**
  * Mounted at `/api/v1/users` (see this module’s `routes.register.js`).
  */

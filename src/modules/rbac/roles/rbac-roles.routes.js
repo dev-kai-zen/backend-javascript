@@ -2,7 +2,7 @@ import { Router } from "express";
 
 import * as rbacRolesController from "./rbac-roles.controller.js";
 import { RBAC_ROLES } from "../rbac.permissions.js";
-import  routesGuard  from "../../../shared/middlewares/routes-guard.js";
+import routesGuard from "../../../shared/middlewares/routes-guard.js";
 
 export const rbacRolesRoutes = Router();
 

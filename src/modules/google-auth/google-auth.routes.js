@@ -8,5 +8,5 @@ export const googleAuthRoutes = Router();
 
 googleAuthRoutes.post("/login", authRateLimiter, googleAuthController.login);
 googleAuthRoutes.post("/refresh", googleAuthController.refresh);
-googleAuthRoutes.post("/logout",authRateLimiter, googleAuthController.logout);
+googleAuthRoutes.post("/logout", authRateLimiter, googleAuthController.logout);
 googleAuthRoutes.get("/me", authenticateJwt, googleAuthController.me);
