@@ -6,6 +6,7 @@ import {
   sendValidationError,
 } from "../../shared/http/api-response.js";
 import * as refreshTokenService from "./refresh-token.service.js";
+import { asyncHandler } from "../../shared/middlewares/async-handler.js";
 
 /**
  * @param {unknown} val
@@ -37,8 +38,7 @@ function parseId(raw) {
  * @param {import("express").Request} req
  * @param {import("express").Response} res
  */
-export async function listRefreshTokens(req, res) {
-  try {
+export const listRefreshTokens = asyncHandler(async (req, res) => {
     const filters = refreshTokenService.parseListFilters(
       firstQueryString(req.query.userId),
     );
@@ -47,58 +47,40 @@ export async function listRefreshTokens(req, res) {
       message: "Refresh tokens fetched successfully",
       data: rows,
     });
-  } catch (err) {
-    console.error("listRefreshTokens:", err);
-    return sendError(res, {
-      message: "Failed to list refresh tokens",
-      statusCode: 500,
-    });
-  }
-}
+},
+  {
+    defaultMessage: "Failed to list refresh tokens",
+    defaultStatusCode: 500,
+  },
+);
 
 /**
  * @param {import("express").Request} req
  * @param {import("express").Response} res
  */
-export async function createRefreshToken(req, res) {
-  try {
+export const createRefreshToken = asyncHandler(async (req, res) => {
     const row = await refreshTokenService.createRefreshToken(req.body);
     return sendSuccess(res, {
       message: "Refresh token created successfully",
       statusCode: 201,
       data: row,
     });
-  } catch (err) {
-    console.error("createRefreshToken:", err);
-    if (
-      err instanceof UniqueConstraintError ||
-      err.name === "SequelizeUniqueConstraintError"
-    ) {
-      return sendError(res, {
-        message: "token value already exists",
-        statusCode: 409,
-      });
-    }
-    if (err instanceof Error) {
-      return sendValidationError(res, { message: err.message });
-    }
-    return sendError(res, {
-      message: "Failed to create refresh token",
-      statusCode: 500,
-    });
-  }
-}
+},
+  {
+    defaultMessage: "Failed to create refresh token",
+    defaultStatusCode: 500,
+  },
+);
 
 /**
  * @param {import("express").Request} req
  * @param {import("express").Response} res
  */
-export async function getRefreshToken(req, res) {
+export const getRefreshToken = asyncHandler(async (req, res) => {
   const id = parseId(req.params.id);
   if (id === null) {
     return sendValidationError(res, { message: "Invalid id" });
   }
-  try {
     const row = await refreshTokenService.getRefreshToken(id);
     if (!row) {
       return sendError(res, {
@@ -110,25 +92,22 @@ export async function getRefreshToken(req, res) {
       message: "Refresh token fetched successfully",
       data: row,
     });
-  } catch (err) {
-    console.error("getRefreshToken:", err);
-    return sendError(res, {
-      message: "Failed to get refresh token",
-      statusCode: 500,
-    });
-  }
-}
+},
+  {
+    defaultMessage: "Failed to get refresh token",
+    defaultStatusCode: 500,
+  },
+);
 
 /**
  * @param {import("express").Request} req
  * @param {import("express").Response} res
  */
-export async function deleteRefreshToken(req, res) {
+export const deleteRefreshToken = asyncHandler(async (req, res) => {
   const id = parseId(req.params.id);
   if (id === null) {
     return sendValidationError(res, { message: "Invalid id" });
   }
-  try {
     const deleted = await refreshTokenService.deleteRefreshToken(id);
     if (!deleted) {
       return sendError(res, {
@@ -140,21 +119,18 @@ export async function deleteRefreshToken(req, res) {
       message: "Refresh token deleted successfully",
       data: null,
     });
-  } catch (err) {
-    console.error("deleteRefreshToken:", err);
-    return sendError(res, {
-      message: "Failed to delete refresh token",
-      statusCode: 500,
-    });
-  }
-}
+  },
+  {
+    defaultMessage: "Failed to delete refresh token",
+    defaultStatusCode: 500,
+  },
+);
 
 /**
  * @param {import("express").Request} req
  * @param {import("express").Response} res
  */
-export async function revokeRefreshToken(req, res) {
-  try {
+export const revokeRefreshToken = asyncHandler(async (req, res) => {
     const deleted = await refreshTokenService.revokeRefreshToken(req.body);
     if (!deleted) {
       return sendError(res, {
@@ -166,14 +142,9 @@ export async function revokeRefreshToken(req, res) {
       message: "Refresh token revoked successfully",
       data: null,
     });
-  } catch (err) {
-    console.error("revokeRefreshToken:", err);
-    if (err instanceof Error) {
-      return sendValidationError(res, { message: err.message });
-    }
-    return sendError(res, {
-      message: "Failed to revoke refresh token",
-      statusCode: 500,
-    });
-  }
-}
+  },
+  {
+    defaultMessage: "Failed to revoke refresh token",
+    defaultStatusCode: 500,
+  },
+);

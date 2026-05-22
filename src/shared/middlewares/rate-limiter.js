@@ -12,7 +12,7 @@ const WINDOW_MS = 15 * 60 * 1000;
  */
 export const apiRateLimiter = rateLimit({
   windowMs: WINDOW_MS,
-  limit: 300,
+  limit: 10000,
   standardHeaders: "draft-7",
   legacyHeaders: false,
   message: {
@@ -28,7 +28,7 @@ export const apiRateLimiter = rateLimit({
  */
 export const authRateLimiter = rateLimit({
   windowMs: WINDOW_MS,
-  limit: 30,
+  limit: 10000,
   standardHeaders: "draft-7",
   legacyHeaders: false,
   message: {

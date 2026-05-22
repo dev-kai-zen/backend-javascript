@@ -4,6 +4,7 @@ import {
   sendValidationError,
 } from "../../shared/http/api-response.js";
 import * as auditLogsService from "./audit-logs.service.js";
+import { asyncHandler } from "../../shared/middlewares/async-handler.js";
 
 /**
  * @param {unknown} val
@@ -23,8 +24,8 @@ function firstQueryString(val) {
  * @param {import("express").Request} req
  * @param {import("express").Response} res
  */
-export async function listAuditLogs(req, res) {
-  try {
+export const listAuditLogs = asyncHandler(
+  async (req, res) => {
     const logs = await auditLogsService.listAuditLogs(
       firstQueryString(req.query.action),
       firstQueryString(req.query.entity_type),
@@ -35,35 +36,27 @@ export async function listAuditLogs(req, res) {
       message: "Audit logs fetched successfully",
       data: logs,
     });
-  } catch (err) {
-    console.error("listAuditLogs:", err);
-    return sendError(res, {
-      message: "Failed to list audit logs",
-      statusCode: 500,
-    });
-  }
-}
+  },
+  {
+    defaultMessage: "Failed to fetch audit logs",
+    defaultStatusCode: 500,
+  },
+);
 
 /**
  * @param {import("express").Request} req
  * @param {import("express").Response} res
  */
-export async function createAuditLogs(req, res) {
-  try {
+export const createAuditLogs = asyncHandler(async (req, res) => {
     const rows = await auditLogsService.createAuditLogs(req.body);
     return sendSuccess(res, {
       message: "Audit logs created successfully",
       statusCode: 201,
       data: rows,
     });
-  } catch (err) {
-    console.error("createAuditLogs:", err);
-    if (err instanceof Error) {
-      return sendValidationError(res, { message: err.message });
-    }
-    return sendError(res, {
-      message: "Failed to create audit logs",
-      statusCode: 500,
-    });
-  }
-}
+    },
+  {
+    defaultMessage: "Failed to create audit logs",
+    defaultStatusCode: 500,
+  },
+);

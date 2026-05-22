@@ -1,5 +1,6 @@
 import { env } from "../../config/env-config.js";
 import { sendError, sendSuccess, sendValidationError } from "../../shared/http/api-response.js";
+import { asyncHandler } from "../../shared/middlewares/async-handler.js";
 import { buildUserPayload } from "./google-auth.payload.js";
 import * as googleAuthService from "./google-auth.service.js";
 
@@ -21,12 +22,8 @@ function clearRefreshCookie(res) {
   res.clearCookie(REFRESH_COOKIE_NAME, refreshCookieBase());
 }
 
-/**
- * @param {import("express").Request} req
- * @param {import("express").Response} res
- */
-export async function login(req, res) {
-  try {
+export const login = asyncHandler(
+  async (req, res) => {
     const googleToken = req.body?.googleToken;
     if (typeof googleToken !== "string" || googleToken.trim() === "") {
       return sendValidationError(res, { message: "Google Token is required" });
@@ -48,24 +45,12 @@ export async function login(req, res) {
         permissions: [],
       },
     });
-  } catch (err) {
-    if (err?.statusCode != null) {
-      return sendError(res, {
-        message: err.message,
-        statusCode: err.statusCode,
-      });
-    }
-    console.error("google-auth login:", err);
-    return sendError(res, { message: "Login failed", statusCode: 500 });
-  }
-}
+  },
+  { defaultMessage: "Login failed", logLabel: "google-auth login:" },
+);
 
-/**
- * @param {import("express").Request} req
- * @param {import("express").Response} res
- */
-export async function refresh(req, res) {
-  try {
+export const refresh = asyncHandler(
+  async (req, res) => {
     const raw = req.cookies?.[REFRESH_COOKIE_NAME];
     if (typeof raw !== "string" || raw.trim() === "") {
       clearRefreshCookie(res);
@@ -75,27 +60,19 @@ export async function refresh(req, res) {
       });
     }
 
-    const accessToken =
-      await googleAuthService.refreshAccessToken(raw);
+    const accessToken = await googleAuthService.refreshAccessToken(raw);
     return sendSuccess(res, {
       message: "Token refreshed",
       data: { accessToken },
     });
-  } catch (err) {
-    clearRefreshCookie(res);
-    if (err?.statusCode != null) {
-      return sendError(res, {
-        message: err.message,
-        statusCode: err.statusCode,
-      });
-    }
-    console.error("google-auth refresh:", err);
-    return sendError(res, {
-      message: "Not authenticated",
-      statusCode: 401,
-    });
-  }
-}
+  },
+  {
+    defaultMessage: "Not authenticated",
+    defaultStatusCode: 401,
+    logLabel: "google-auth refresh:",
+    onError: (_req, res) => clearRefreshCookie(res),
+  },
+);
 
 /**
  * @param {import("express").Request} _req
@@ -109,12 +86,8 @@ export async function logout(_req, res) {
   });
 }
 
-/**
- * @param {import("express").Request} req
- * @param {import("express").Response} res
- */
-export async function me(req, res) {
-  try {
+export const me = asyncHandler(
+  async (req, res) => {
     const user = req.authUser;
     if (!user?.id) {
       return sendError(res, { message: "Unauthorized", statusCode: 401 });
@@ -127,17 +100,6 @@ export async function me(req, res) {
         permissions: fresh.permissions,
       },
     });
-  } catch (err) {
-    if (err?.statusCode != null) {
-      return sendError(res, {
-        message: err.message,
-        statusCode: err.statusCode,
-      });
-    }
-    console.error("google-auth me:", err);
-    return sendError(res, {
-      message: "Failed to load profile",
-      statusCode: 500,
-    });
-  }
-}
+  },
+  { defaultMessage: "Failed to load profile", logLabel: "google-auth me:" },
+);

@@ -4,6 +4,7 @@ import {
   sendValidationError,
 } from "../../shared/http/api-response.js";
 import * as userLogsService from "./user-logs.service.js";
+import { asyncHandler } from "../../shared/middlewares/async-handler.js";
 
 /**
  * @param {unknown} val
@@ -23,8 +24,7 @@ function firstQueryString(val) {
  * @param {import("express").Request} req
  * @param {import("express").Response} res
  */
-export async function listUserLogs(req, res) {
-  try {
+export const listUserLogs = asyncHandler(async (req, res) => {
     const logs = await userLogsService.listUserLogs(
       firstQueryString(req.query.userId),
       firstQueryString(req.query.action),
@@ -36,35 +36,27 @@ export async function listUserLogs(req, res) {
       message: "User logs fetched successfully",
       data: logs,
     });
-  } catch (err) {
-    console.error("listUserLogs:", err);
-    return sendError(res, {
-      message: "Failed to list user logs",
-      statusCode: 500,
-    });
-  }
-}
+  },
+  {
+    defaultMessage: "Failed to list user logs",
+    defaultStatusCode: 500,
+  },
+);
 
 /**
  * @param {import("express").Request} req
  * @param {import("express").Response} res
  */
-export async function createUserLog(req, res) {
-  try {
+export const createUserLog = asyncHandler(async (req, res) => {
     const log = await userLogsService.createUserLog(req.body);
     return sendSuccess(res, {
       message: "User log created successfully",
       statusCode: 201,
       data: log,
     });
-  } catch (err) {
-    console.error("createUserLog:", err);
-    if (err instanceof Error) {
-      return sendValidationError(res, { message: err.message });
-    }
-    return sendError(res, {
-      message: "Failed to create user log",
-      statusCode: 500,
-    });
-  }
-}
+  },
+  {
+    defaultMessage: "Failed to create user log",
+    defaultStatusCode: 500,
+  },
+);
